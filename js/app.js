@@ -89,6 +89,7 @@ const els = {
   ticker: document.getElementById('ticker'),
   list: document.getElementById('trades'),
   empty: document.getElementById('empty'),
+  filter: document.getElementById('filter'),
 };
 
 function money(n) {
@@ -117,8 +118,14 @@ function render() {
   els.statWeek.textContent = signedMoney(total(week));
   els.statLosses.textContent = `${today.filter((t) => t.amount < 0).length} of ${rules.maxLosses}`;
 
-  els.list.innerHTML = '';
-  const shown = [...today].reverse(); // newest first
+  // Which trades the list shows depends on the dropdown. The data does not change.
+  let shown;
+  if (els.filter.value === 'today') shown = today;
+  else if (els.filter.value === 'week') shown = week;
+  else shown = trades;
+  shown = [...shown].reverse(); // newest first
+
+  els.list.replaceChildren();
   for (const t of shown) {
     const li = document.createElement('li');
     const time = document.createElement('span');
@@ -129,10 +136,19 @@ function render() {
     const result = document.createElement('span');
     result.className = 'result';
     result.textContent = signedMoney(t.amount);
-    li.append(time, ticker, result);
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'btn-quiet';
+    del.textContent = 'Delete';
+    del.dataset.id = t.id;
+    del.setAttribute('aria-label', `Delete the ${signedMoney(t.amount)} trade at ${clock(t.time)}`);
+    li.append(time, ticker, result, del);
     els.list.appendChild(li);
   }
   els.empty.hidden = shown.length > 0;
+  els.empty.textContent = trades.length === 0
+    ? 'No trades yet. Log your first one above.'
+    : 'No trades in this view.';
 }
 
 // ---- Checking input ----
@@ -170,6 +186,20 @@ function addTrade(amount, ticker) {
   save();
   render();
 }
+
+function deleteTrade(id) {
+  trades = trades.filter((t) => t.id !== id);
+  save();
+  render();
+}
+
+// One listener on the whole list catches every Delete button, even ones added later.
+els.list.addEventListener('click', (e) => {
+  const button = e.target.closest('button[data-id]');
+  if (button) deleteTrade(Number(button.dataset.id));
+});
+
+els.filter.addEventListener('change', render);
 
 els.tradeForm.addEventListener('submit', (e) => {
   e.preventDefault();
