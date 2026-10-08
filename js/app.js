@@ -135,6 +135,29 @@ function render() {
   els.empty.hidden = shown.length > 0;
 }
 
+// ---- Checking input ----
+
+// Turns what was typed into a number, or returns a message saying what is wrong.
+// Accepts things like "-12", "+30", "-$12.50" and "1,200".
+function readAmount(text) {
+  const cleaned = text.replace(/[$,\s]/g, '');
+  if (cleaned === '') return { error: 'Enter the result, like -12 or 30.' };
+  if (!/^[+-]?\d+(\.\d{1,2})?$/.test(cleaned)) return { error: 'Use a number, like -12.50.' };
+  const amount = Number(cleaned);
+  if (amount === 0) return { error: 'A $0 trade does not count. Enter a win or a loss.' };
+  return { amount };
+}
+
+function showError(input, message) {
+  const msg = document.getElementById(`${input.id}-msg`);
+  msg.textContent = message;
+  if (message) {
+    input.setAttribute('aria-invalid', 'true');
+  } else {
+    input.removeAttribute('aria-invalid');
+  }
+}
+
 // ---- Actions ----
 
 function addTrade(amount, ticker) {
@@ -150,7 +173,14 @@ function addTrade(amount, ticker) {
 
 els.tradeForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  addTrade(Number(els.amount.value), els.ticker.value.trim());
+  const result = readAmount(els.amount.value);
+  if (result.error) {
+    showError(els.amount, result.error); // keep what was typed so it can be fixed
+    els.amount.focus();
+    return;
+  }
+  showError(els.amount, '');
+  addTrade(result.amount, els.ticker.value.trim());
   els.tradeForm.reset();
   els.amount.focus();
 });
