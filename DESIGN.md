@@ -2,84 +2,93 @@
 version: alpha
 name: Trade Check
 colors:
-  page: "#E8EBEF"
-  surface: "#FFFFFF"
-  ink: "#18202A"
-  muted: "#5A6573"
-  line: "#CDD3DA"
-  board: "#1C2733"
-  tile: "#273546"
-  hinge: "#121A23"
-  board-text: "#EEF2F6"
-  board-muted: "#9AA8B8"
-  go: "#52C98A"
-  wait: "#F5B83D"
-  stop: "#FF6B5B"
-  error: "#B42318"
+  bg-go: "#071A10"
+  bg-wait: "#1C1204"
+  bg-stop: "#1F0705"
+  go: "#3DF28A"
+  wait: "#FFB01F"
+  stop: "#FF4B3E"
+  face: "#182420"
+  face-wait: "#2A1E0C"
+  face-stop: "#2E100D"
+  hinge: "#050807"
+  text: "#F2F5F3"
+  text-muted: "#93A39B"
+  well: "rgba(255, 255, 255, 0.06)"
+  edge: "rgba(255, 255, 255, 0.16)"
+  on-signal: "#07110B"
 typography:
   display:
     fontFamily: '"DIN Condensed", "Bahnschrift Condensed", Bahnschrift, "Arial Narrow", sans-serif'
-    fontSize: clamp(60px, 17vw, 132px)
+    fontSize: clamp(96px, 26vw, 220px)
     fontWeight: 700
     lineHeight: 1
+    textTransform: uppercase
   figures:
     fontFamily: '"DIN Alternate", Bahnschrift, system-ui, sans-serif'
     fontVariantNumeric: tabular-nums
     fontWeight: 700
-  heading:
-    fontFamily: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif
-    fontSize: 20px
+  countdown:
+    fontFamily: '"DIN Condensed", "Bahnschrift Condensed", Bahnschrift, "Arial Narrow", sans-serif'
+    fontSize: clamp(56px, 14vw, 96px)
     fontWeight: 700
+  heading:
+    fontFamily: '"DIN Condensed", "Bahnschrift Condensed", Bahnschrift, "Arial Narrow", sans-serif'
+    fontSize: 30px
+    fontWeight: 700
+    textTransform: uppercase
+    letterSpacing: 0.02em
   body:
-    fontFamily: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif
+    fontFamily: '"Helvetica Neue", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
     fontSize: 17px
-    fontWeight: 400
     lineHeight: 1.5
-  small:
-    fontSize: 15px
 rounded:
-  tile: 6px
-  board: 14px
-  control: 8px
+  tile: 10px
+  control: 6px
+  lamp: 50%
 spacing:
   unit: 8px
-  gutter: 16px
-  section: 32px
-  column: 1080px
+  gutter: 20px
+  section: 40px
+  column: 1240px
 components:
   flap-tile:
-    backgroundColor: "{colors.tile}"
+    faceColor: "{colors.face}"
     hingeColor: "{colors.hinge}"
     rounded: "{rounded.tile}"
-  gauge-track:
-    backgroundColor: "{colors.tile}"
-    height: 10px
-    rounded: 5px
+    flipDuration: 160ms per half
+  dial:
+    trackColor: "{colors.face}"
+    fillColor: signal
+    needleColor: "{colors.text}"
+  lamp:
+    offColor: "{colors.face}"
+    onColor: "{colors.stop}"
+    size: 30px
   button-primary:
-    backgroundColor: "{colors.board}"
-    textColor: "{colors.board-text}"
+    backgroundColor: signal
+    textColor: "{colors.on-signal}"
     rounded: "{rounded.control}"
-    padding: 14px 22px
-  button-primary-hover:
-    backgroundColor: "{colors.tile}"
+    padding: 16px 26px
   button-quiet:
     backgroundColor: transparent
-    textColor: "{colors.ink}"
-    borderColor: "{colors.line}"
-    rounded: "{rounded.control}"
+    textColor: "{colors.text}"
+    borderColor: "{colors.edge}"
   button-danger:
-    textColor: "{colors.error}"
-    borderColor: "{colors.error}"
+    textColor: "{colors.stop}"
+    borderColor: "{colors.stop}"
   input:
-    backgroundColor: "{colors.surface}"
-    borderColor: "{colors.line}"
+    backgroundColor: "{colors.well}"
+    borderColor: "{colors.edge}"
+    textColor: "{colors.text}"
     rounded: "{rounded.control}"
   input-focus:
-    outline: 3px solid {colors.board}
+    borderColor: signal
+    outline: 2px solid signal
   input-error:
-    borderColor: "{colors.error}"
+    borderColor: "{colors.stop}"
   field-message:
-    textColor: "{colors.error}"
+    textColor: "{colors.stop}"
 ---
 
 # Trade Check
@@ -89,98 +98,104 @@ components:
 Who opens this: someone about to place a trade, on a phone, who needs one
 answer in the first two seconds. Can I trade right now?
 
-The direction is a split-flap departure board at a train station. The answer
-sits on a dark board in big flap tiles, and the tiles flip letter by letter
-when the answer changes, the way a board changes when a train is cancelled.
-Below the answer, still on the board, three gauges show how close today and
-this week are to the limits. Everything outside the board is quiet: light gray,
-plain type, forms that stay out of the way.
+The direction is a station annunciator seen from the platform at night. The
+whole screen is the signal. The page goes deep green when you can trade, deep
+amber while you wait, and deep red when you are done. The answer is a real
+split-flap unit: each tile has a top and a bottom half, and the top half folds
+down to reveal the next letter, the way a mechanical board changes. Under it
+sit three instruments: an analog dial for today's limit with a needle, a row of
+lamps for losses, and a marked bar for the week. A clock ticks in the corner.
+Everything you type goes into dark wells cut into the same surface.
 
-Redesigned 2026-10-08. The first version had the right layout but the answer
-was only big green text. The board makes the answer feel like a signal you obey,
-not a sentence you read.
+Third pass, 2026-10-08. The first look was plain text. The second put the
+answer on a dark board inside a light page, which split the attention. Now
+there is one surface and one color at a time.
 
 ## Colors
 
-- **page** is the background outside the board. Cool gray, not cream.
-- **surface** is inside inputs.
-- **ink** is text outside the board. **muted** is helper text and times.
-- **line** is hairlines between list rows and input borders.
-- **board** is the board and the main buttons. **tile** is each flap tile and
-  the empty part of a gauge. **hinge** is the split line across each tile.
-- **board-text** and **board-muted** are text on the board.
-- **go**, **wait** and **stop** only appear on the board: the answer letters,
-  the reason line and the filled part of the gauges.
-- **error** is field messages and the Start over button, on the light page.
+- **bg-go**, **bg-wait** and **bg-stop** are the page background, one per
+  answer. The change fades over half a second.
+- **go**, **wait** and **stop** are the signal, used for the flap letters, the
+  reason line, the countdown, the dial fill, the primary button and focus
+  rings. Only the current signal color appears, except stop, which also lights
+  the loss lamps and marks errors in any state.
+- **face** (and its wait and stop variants) is the flap faces, dial track, lamp
+  off state and bar track, one step lighter than the page.
+- **hinge** is the split line across each tile.
+- **text** and **text-muted** are all other type.
+- **well** and **edge** are input fills and borders. **on-signal** is text on a
+  signal-colored button.
 
 ## Typography
 
-No web fonts. Every face is already on the computer: DIN on a Mac, Bahnschrift
-on Windows, which is the same kind of face.
+No web fonts. DIN Condensed and DIN Alternate on a Mac, Bahnschrift on Windows.
 
-- **display** is the flap letters, condensed DIN, all caps because a departure
-  board is.
-- **figures** is every dollar amount, time and countdown, with numbers that
-  line up.
-- **heading** is section titles in sentence case. No all-caps labels and no
-  monospace labels anywhere.
-- **body** is everything else.
+- **display** is the flap letters. They are the largest thing on any screen.
+- **countdown** is the cooldown clock, in the same condensed face, so it reads
+  like a departure time.
+- **heading** is section titles, condensed caps, because every sign on a
+  platform is set that way. This is the one place caps are allowed outside the
+  tiles.
+- **figures** is every dollar amount, time and the clock, with lining digits.
+- **body** is sentences, labels and messages.
 
 ## Layout
 
-On a phone, one column: the board, then Log a trade, then the trades list, then
-My rules, then Reset. The board fills most of the first screen and the log
-form starts right under it.
+A thin header: the name on the left, the live clock on the right.
 
-On a laptop (900px and up), two columns inside 1080px: the board on the left,
-which stays in place while you scroll, and the form, list, rules and reset on
-the right.
+Phone, one column: the flap unit edge to edge, the reason and countdown, then
+the three instruments in a row (dial, lamps, bar), then net today and this
+week. Then Log a trade, Trades as a tape, My rules folded, Reset.
 
-On the board, top to bottom: "Can I trade?", the flap tiles, the reason line,
-the countdown if there is one, then three gauges: down today out of the daily
-limit, one dot per allowed loss, down this week out of the weekly limit. "Down"
-means the net for the day or week, because that is what the limits check.
+Laptop (960px and up): two columns inside 1240px. The signal unit on the left
+fills the viewport height and stays put. The controls scroll on the right.
 
 ## Elevation & Depth
 
-The board is the only raised thing on the page, shown by its dark color, not by
-a shadow. Each flap tile has a 1px hinge line across the middle. No shadows,
-no gradients, no glass.
+One surface. Depth comes from the flap halves rotating in 3D, the inset ring
+on each lamp, and the wells. No drop shadows on anything flat, no gradients
+used as decoration. A faint film grain overlays the page so large flat areas do
+not band; it is an inline SVG filter at 5% opacity.
 
 ## Shapes
 
-Three radii, by size: 6px tiles, 8px controls, 14px for the board. Gauges are
-round-ended bars.
+Tiles 10px, controls 6px, lamps round. The dial is a half circle with round
+caps.
 
 ## Motion
 
-One moment: the tiles flip when the answer changes, one after another, about
-60ms apart. It happens because the user did something, so it shows what
-changed. The gauges slide to their new length. Nothing moves on its own except
-the countdown digits. With reduced motion turned on, the letters change with no
-flip.
+- The flap: the top half of the old letter folds down over 160ms, then the
+  bottom half of the new letter folds into place over 160ms. Tiles go left to
+  right, 70ms apart. It runs on load from blank, and whenever the answer
+  changes.
+- The dial needle and fill ease to their new value over 600ms.
+- A lamp lights with no animation. The page color fades over 500ms.
+- With reduced motion on, letters change in place and nothing eases.
 
 ## Components
 
-- **Flap tile:** a fixed-width tile with one letter. Four tiles, so YES, NO and
-  WAIT all fit, padded with blank tiles.
-- **Gauge:** a label and a figure on one line ("Down today", "$12.50 of $50"),
-  the bar under it. The bar is go below 60%, wait from 60%, stop at 100%.
-- **Loss dots:** one dot per allowed loss, filled stop for each loss today.
-- **Main button** (Log trade, Save rules): board color, light text.
-- **Quiet button** (Delete, Clear today): no fill, hairline border.
-- **Danger button** (Start over): no fill, error border and text.
-- **Input:** white, hairline border, 3px board outline on focus, error border on
-  a problem. The result field is large, in figures, because it is the action.
-- **Rules:** closed by default behind one line that says the current rules in
-  words. Open it to edit.
+- **Flap unit:** four tiles, letters padded with blank tiles.
+- **Dial:** half circle, five ticks, fill from the left, needle from the hub.
+  The figure under it reads "$30 of $50".
+- **Lamps:** one per allowed loss, up to twenty, lit stop for each loss today.
+- **Bar:** the week, with tick marks every 25%.
+- **Primary button:** signal fill, dark text. Hover brightens by a step with
+  no other effect.
+- **Quiet button:** edge border, light text. **Danger button:** stop border and
+  text; solid stop with dark text when armed.
+- **Input:** a well. The result field is a large figure with a dollar sign
+  fixed at its left. Focus draws a signal ring.
+- **Tape:** the trades list, rows separated by hairlines, times and results in
+  figures.
+- **Rules:** folded behind one line that says them in words, with Edit.
 
 ## Do's and Don'ts
 
-- Do keep the board the only dark, colorful thing on the page. My own rule: the
-  answer is the page, so nothing outside the board uses go, wait or stop.
-- Do say every rule and limit in words with numbers, like "$12.50 of $50".
-- Don't color wins green or losses red in the list. Plus and minus are enough.
-- Don't use cards, shadows, gradients, pill buttons, emoji or icons.
-- Don't use all caps outside the flap tiles.
+- Do let the page color carry the answer. My own rule: there is one surface
+  and one signal color at a time, so nothing else on the page gets a color of
+  its own. It costs me colored wins and losses in the tape, which I accept.
+- Do keep every instrument honest: the needle shows the actual share of the
+  limit, never a decorative value.
+- Don't use cards, drop shadows, glows, glass, gradients, emoji or icons.
+- Don't use caps outside the tiles and section headings.
 - Don't add a color, font or size that is not in this file.
