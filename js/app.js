@@ -16,16 +16,27 @@ const DEFAULT_RULES = {
 let trades = []; // each trade: { id, amount, ticker, time }
 let rules = { ...DEFAULT_RULES };
 
+// The first visit has nothing saved, so the defaults stay. If what is saved
+// is broken, or the browser blocks storage, the page still works from the defaults.
 function load() {
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  if (saved) {
-    trades = saved.trades;
-    rules = saved.rules;
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved) {
+      trades = Array.isArray(saved.trades) ? saved.trades : [];
+      rules = { ...DEFAULT_RULES, ...saved.rules };
+    }
+  } catch {
+    trades = [];
+    rules = { ...DEFAULT_RULES };
   }
 }
 
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ trades, rules }));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ trades, rules }));
+  } catch {
+    // Storage is blocked (some private windows). The page keeps working until it closes.
+  }
 }
 
 // ---- Working out the answer ----
@@ -109,7 +120,8 @@ const els = {
 
 function money(n) {
   const sign = n < 0 ? '-' : '';
-  return `${sign}$${Math.abs(n).toFixed(2)}`;
+  const digits = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${sign}$${digits}`;
 }
 
 function signedMoney(n) {
@@ -177,9 +189,9 @@ function render() {
     els.list.appendChild(li);
   }
   els.empty.hidden = shown.length > 0;
-  els.empty.textContent = trades.length === 0
-    ? 'No trades yet. Log your first one above.'
-    : 'No trades in this view.';
+  if (trades.length === 0) els.empty.textContent = 'No trades yet. Log your first one above.';
+  else if (els.filter.value === 'today') els.empty.textContent = 'No trades today.';
+  else els.empty.textContent = 'No trades this week.';
 }
 
 // ---- Checking input ----
