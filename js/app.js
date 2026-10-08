@@ -119,10 +119,12 @@ const els = {
   tiles: [...document.querySelectorAll('#flaps .tile')],
   dayFig: document.getElementById('day-fig'),
   dayFill: document.getElementById('day-fill'),
+  needle: document.getElementById('needle'),
   weekFig: document.getElementById('week-fig'),
   weekFill: document.getElementById('week-fill'),
   dots: document.getElementById('dots'),
   rulesSummary: document.getElementById('rules-summary'),
+  clock: document.getElementById('clock'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -154,40 +156,61 @@ function shortMoney(n) {
   return Number.isInteger(n) ? `$${n.toLocaleString('en-US')}` : money(n);
 }
 
-// The split-flap board. Each tile flips only if its letter changes, one after
-// another, so YES to NO flips the tiles that differ. Looks only: the answer
-// itself is the hidden #verdict text, which screen readers read.
+// The split-flap unit. Each tile is two halves. To change a letter, the top
+// half of the old letter folds down, then the bottom half of the new letter
+// folds into place. Tiles go left to right. Looks only: the answer itself is
+// the hidden #verdict text, which screen readers read.
+function flipTile(tile, letter) {
+  const top = tile.querySelector('.top .ch');
+  const bottom = tile.querySelector('.bottom .ch');
+  const flipTop = tile.querySelector('.flip-top .ch');
+  const flipBottom = tile.querySelector('.flip-bottom .ch');
+  const old = tile.dataset.letter;
+  tile.dataset.letter = letter;
+  if (reduceMotion) {
+    top.textContent = letter;
+    bottom.textContent = letter;
+    return;
+  }
+  top.textContent = letter;      // the new letter is already behind the fold
+  bottom.textContent = old;      // the old bottom stays until the fold lands
+  flipTop.textContent = old;
+  flipBottom.textContent = letter;
+  tile.classList.remove('flipping');
+  void tile.offsetWidth;          // restart the animation if it is mid-flip
+  tile.classList.add('flipping');
+  setTimeout(() => {
+    bottom.textContent = letter;
+    tile.classList.remove('flipping');
+  }, 340);
+}
+
 function setFlaps(word) {
   const letters = word.toUpperCase().padEnd(els.tiles.length, ' ').split('');
   els.tiles.forEach((tile, i) => {
-    const ch = tile.firstElementChild;
     if (tile.dataset.letter === letters[i]) return;
-    tile.dataset.letter = letters[i];
-    if (reduceMotion) {
-      ch.textContent = letters[i];
-      return;
-    }
-    setTimeout(() => {
-      tile.classList.remove('flip');
-      void tile.offsetWidth; // restart the animation if it is already running
-      tile.classList.add('flip');
-      setTimeout(() => { ch.textContent = letters[i]; }, 140); // swap at the halfway point
-    }, i * 60);
+    setTimeout(() => flipTile(tile, letters[i]), i * 70);
   });
 }
 
-// Fills a gauge bar: go under 60%, wait from 60%, stop at 100%.
-function setGauge(fill, used, limit) {
+const DIAL_LENGTH = 251.4; // length of the half-circle path in the SVG
+
+// The dial: fill from the left and swing the needle, both from the same share.
+function setDial(used, limit) {
   const share = Math.min(used / limit, 1);
-  fill.style.width = `${share * 100}%`;
-  fill.dataset.level = share >= 1 ? 'stop' : share >= 0.6 ? 'wait' : 'go';
+  els.dayFill.style.strokeDashoffset = DIAL_LENGTH * (1 - share);
+  els.needle.style.transform = `rotate(${-90 + 180 * share}deg)`;
+}
+
+function setBar(fill, used, limit) {
+  fill.style.width = `${Math.min(used / limit, 1) * 100}%`;
 }
 
 let lastAnswer = '';
 
 function renderAnswer(now) {
   const verdict = getVerdict(now);
-  els.answer.dataset.state = verdict.state;
+  document.body.dataset.state = verdict.state;
   els.verdict.textContent = verdict.word;
   setFlaps(verdict.word);
   els.reason.textContent = verdict.reason;
@@ -211,15 +234,15 @@ function render() {
   const lostWeek = Math.max(0, -total(week));
   els.dayFig.textContent = `${shortMoney(lostToday)} of ${shortMoney(rules.dailyLimit)}`;
   els.weekFig.textContent = `${shortMoney(lostWeek)} of ${shortMoney(rules.weeklyLimit)}`;
-  setGauge(els.dayFill, lostToday, rules.dailyLimit);
-  setGauge(els.weekFill, lostWeek, rules.weeklyLimit);
+  setDial(lostToday, rules.dailyLimit);
+  setBar(els.weekFill, lostWeek, rules.weeklyLimit);
 
-  // One dot per allowed loss, filled for each loss today.
+  // One lamp per allowed loss, lit for each loss today.
   els.dots.replaceChildren();
   for (let i = 0; i < Math.min(rules.maxLosses, 20); i++) {
-    const dot = document.createElement('span');
-    dot.className = i < lossCount ? 'dot used' : 'dot';
-    els.dots.appendChild(dot);
+    const lamp = document.createElement('span');
+    lamp.className = i < lossCount ? 'lamp on' : 'lamp';
+    els.dots.appendChild(lamp);
   }
 
   els.rulesSummary.textContent =
@@ -415,6 +438,7 @@ startOverButton.addEventListener('click', () => {
 // passed), redraw everything. Otherwise only the countdown moves.
 function tick() {
   const now = new Date();
+  els.clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const verdict = getVerdict(now);
   if (verdict.state + verdict.reason !== lastAnswer) {
     render();
@@ -426,5 +450,7 @@ function tick() {
 load();
 fillRulesForm();
 render();
+tick();
 setInterval(tick, 1000);
-els.amount.focus();
+// Ready to type, but without scrolling the signal off the top of a phone.
+els.amount.focus({ preventScroll: true });
