@@ -71,7 +71,16 @@ section:first-child { border-top: none; padding-top: 0; }
 .answer[data-state="no"] .verdict,
 .answer[data-state="no"] .reason { color: var(--stop); }
 .answer[data-state="wait"] .verdict,
-.answer[data-state="wait"] .reason { color: var(--wait); }
+.answer[data-state="wait"] .reason,
+.answer[data-state="wait"] .countdown { color: var(--wait); }
+
+.countdown {
+  margin: calc(var(--unit) / 2) 0 0;
+  font-family: var(--mono);
+  font-weight: 500;
+}
+
+.countdown:empty { display: none; }
 
 /* Today in numbers */
 .stats { margin: 0; }

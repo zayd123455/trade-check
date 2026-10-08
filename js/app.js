@@ -67,6 +67,14 @@ function getVerdict(now) {
   if (losses.length >= rules.maxLosses) {
     return { state: 'no', word: 'No', reason: `${plural(losses.length, 'loss', 'losses')} today. Done for today.` };
   }
+  // Cooldown: the last loss today has to be at least `cooldown` minutes ago.
+  if (losses.length > 0) {
+    const lastLoss = Math.max(...losses.map((t) => new Date(t.time).getTime()));
+    const clearAt = lastLoss + rules.cooldown * 60 * 1000;
+    if (now.getTime() < clearAt) {
+      return { state: 'wait', word: 'Wait', reason: `Cooling down after a loss. Clear at ${clock(clearAt)}.`, clearAt };
+    }
+  }
   if (today.length === 0) {
     return { state: 'yes', word: 'Yes', reason: 'No trades today. You are inside your limits.' };
   }
@@ -96,6 +104,7 @@ const els = {
   filter: document.getElementById('filter'),
   rulesForm: document.getElementById('rules-form'),
   rulesSaved: document.getElementById('rules-saved'),
+  countdown: document.getElementById('countdown'),
 };
 
 function money(n) {
@@ -111,12 +120,28 @@ function clock(time) {
   return new Date(time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-function render() {
-  const now = new Date();
+// "12:05" from a number of milliseconds.
+function countdownText(ms) {
+  const seconds = Math.ceil(ms / 1000);
+  const m = Math.floor(seconds / 60);
+  const s = String(seconds % 60).padStart(2, '0');
+  return `${m}:${s} to go`;
+}
+
+let lastAnswer = '';
+
+function renderAnswer(now) {
   const verdict = getVerdict(now);
   els.answer.dataset.state = verdict.state;
   els.verdict.textContent = verdict.word;
   els.reason.textContent = verdict.reason;
+  els.countdown.textContent = verdict.clearAt ? countdownText(verdict.clearAt - now.getTime()) : '';
+  lastAnswer = verdict.state + verdict.reason;
+}
+
+function render() {
+  const now = new Date();
+  renderAnswer(now);
 
   const today = trades.filter((t) => isToday(t.time, now));
   const week = trades.filter((t) => new Date(t.time) >= startOfWeek(now));
@@ -258,7 +283,20 @@ els.tradeForm.addEventListener('submit', (e) => {
   els.amount.focus();
 });
 
+// Every second: if the answer itself changed (a cooldown ended, or midnight
+// passed), redraw everything. Otherwise only the countdown moves.
+function tick() {
+  const now = new Date();
+  const verdict = getVerdict(now);
+  if (verdict.state + verdict.reason !== lastAnswer) {
+    render();
+  } else {
+    renderAnswer(now);
+  }
+}
+
 load();
 fillRulesForm();
 render();
+setInterval(tick, 1000);
 els.amount.focus();
