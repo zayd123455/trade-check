@@ -283,6 +283,46 @@ els.tradeForm.addEventListener('submit', (e) => {
   els.amount.focus();
 });
 
+// ---- Reset ----
+
+function clearToday() {
+  const now = new Date();
+  trades = trades.filter((t) => !isToday(t.time, now));
+  save();
+  render();
+  els.amount.focus();
+}
+
+function startOver() {
+  trades = [];
+  rules = { ...DEFAULT_RULES };
+  els.filter.value = 'today';
+  els.rulesSaved.textContent = '';
+  save();
+  fillRulesForm();
+  render();
+  els.amount.focus();
+}
+
+document.getElementById('clear-today').addEventListener('click', clearToday);
+
+// Start over erases everything, so it takes two taps instead of a confirm() box.
+const startOverButton = document.getElementById('start-over');
+let armedUntil = 0;
+startOverButton.addEventListener('click', () => {
+  if (Date.now() < armedUntil) {
+    armedUntil = 0;
+    startOverButton.textContent = 'Start over';
+    startOver();
+    return;
+  }
+  armedUntil = Date.now() + 4000;
+  startOverButton.textContent = 'Tap again to erase everything';
+  setTimeout(() => {
+    if (Date.now() >= armedUntil) startOverButton.textContent = 'Start over';
+  }, 4000);
+});
+
 // Every second: if the answer itself changed (a cooldown ended, or midnight
 // passed), redraw everything. Otherwise only the countdown moves.
 function tick() {
