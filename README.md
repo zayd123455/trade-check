@@ -8,7 +8,7 @@ seconds if they are still inside their own rules.
 ## What it does
 
 You log each trade as it closes, as a plus or minus dollar amount. The page
-remembers them and answers one question at the top: can I trade right now?
+remembers them and answers one question on a split-flap board: can I trade right now?
 
 - **Yes**, with how much room is left today.
 - **Wait**, with a countdown, if your last loss was too recent.
@@ -24,7 +24,7 @@ after a refresh. Nothing is sent anywhere.
    weekly loss limit, and how long to wait after a loss. Save rules.
 2. When a trade closes, type the result under **Log a trade**, like `-12` or
    `30`, and press Enter or Log trade. The ticker is optional.
-3. Read the answer at the top before the next one.
+3. Read the board before the next one: the big tiles, the reason under them and the three gauges.
 4. Made a mistake? Delete that trade from the list. The dropdown switches the
    list between today, this week and all trades.
 5. **Clear today** removes today's trades. **Start over** removes everything

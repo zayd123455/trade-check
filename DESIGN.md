@@ -19,7 +19,7 @@ colors:
 typography:
   display:
     fontFamily: '"DIN Condensed", "Bahnschrift Condensed", Bahnschrift, "Arial Narrow", sans-serif'
-    fontSize: clamp(72px, 22vw, 132px)
+    fontSize: clamp(60px, 17vw, 132px)
     fontWeight: 700
     lineHeight: 1
   figures:
@@ -129,15 +129,17 @@ on Windows, which is the same kind of face.
 ## Layout
 
 On a phone, one column: the board, then Log a trade, then the trades list, then
-My rules, then Reset. The board and the log form fit before any scroll.
+My rules, then Reset. The board fills most of the first screen and the log
+form starts right under it.
 
 On a laptop (900px and up), two columns inside 1080px: the board on the left,
 which stays in place while you scroll, and the form, list, rules and reset on
 the right.
 
 On the board, top to bottom: "Can I trade?", the flap tiles, the reason line,
-the countdown if there is one, then three gauges: lost today out of the daily
-limit, one dot per allowed loss, lost this week out of the weekly limit.
+the countdown if there is one, then three gauges: down today out of the daily
+limit, one dot per allowed loss, down this week out of the weekly limit. "Down"
+means the net for the day or week, because that is what the limits check.
 
 ## Elevation & Depth
 
@@ -162,7 +164,7 @@ flip.
 
 - **Flap tile:** a fixed-width tile with one letter. Four tiles, so YES, NO and
   WAIT all fit, padded with blank tiles.
-- **Gauge:** a label and a figure on one line ("Lost today", "$12.50 of $50"),
+- **Gauge:** a label and a figure on one line ("Down today", "$12.50 of $50"),
   the bar under it. The bar is go below 60%, wait from 60%, stop at 100%.
 - **Loss dots:** one dot per allowed loss, filled stop for each loss today.
 - **Main button** (Log trade, Save rules): board color, light text.

@@ -5,105 +5,133 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trade Check</title>
   <meta name="description" content="Log your trades and see if you can place another one today.">
+  <meta name="theme-color" content="#1C2733">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231C2733'/%3E%3Crect x='7' y='7' width='18' height='18' rx='3' fill='%23273546'/%3E%3Crect x='7' y='15.5' width='18' height='1' fill='%23121A23'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%2352C98A'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <main>
-    <section class="answer" id="answer" aria-live="polite">
-      <h1 class="label">Can I trade?</h1>
-      <p class="verdict" id="verdict">Yes</p>
+  <div class="layout">
+
+    <section class="board" id="answer" aria-live="polite">
+      <h1 class="board-question">Can I trade?</h1>
+      <p class="visually-hidden" id="verdict">Yes</p>
+      <div class="flaps" id="flaps" aria-hidden="true">
+        <span class="tile"><span class="ch"></span></span>
+        <span class="tile"><span class="ch"></span></span>
+        <span class="tile"><span class="ch"></span></span>
+        <span class="tile"><span class="ch"></span></span>
+      </div>
       <p class="reason" id="reason">No trades today. You are inside your limits.</p>
       <p class="countdown" id="countdown" aria-hidden="true"></p>
-    </section>
 
-    <section aria-labelledby="today-title">
-      <h2 class="label" id="today-title">Today in numbers</h2>
-      <dl class="stats">
-        <div><dt>Today</dt><dd id="stat-today">$0.00</dd></div>
-        <div><dt>This week</dt><dd id="stat-week">$0.00</dd></div>
-        <div><dt>Losses today</dt><dd id="stat-losses">0 of 2</dd></div>
+      <div class="gauges">
+        <div class="gauge">
+          <p class="gauge-head"><span>Down today</span><span class="fig" id="day-fig">$0 of $50</span></p>
+          <div class="track"><div class="fill" id="day-fill"></div></div>
+        </div>
+        <div class="gauge">
+          <p class="gauge-head"><span>Losses today</span><span class="fig" id="stat-losses">0 of 2</span></p>
+          <div class="dots" id="dots"></div>
+        </div>
+        <div class="gauge">
+          <p class="gauge-head"><span>Down this week</span><span class="fig" id="week-fig">$0 of $150</span></p>
+          <div class="track"><div class="fill" id="week-fill"></div></div>
+        </div>
+      </div>
+
+      <dl class="nets">
+        <div><dt>Net today</dt><dd class="fig" id="stat-today">$0.00</dd></div>
+        <div><dt>Net this week</dt><dd class="fig" id="stat-week">$0.00</dd></div>
       </dl>
     </section>
 
-    <section aria-labelledby="log-title">
-      <h2 class="label" id="log-title">Log a trade</h2>
-      <form id="trade-form" novalidate>
-        <div class="row">
-          <div class="field">
-            <label for="amount">Result in dollars</label>
-            <input id="amount" name="amount" type="text" inputmode="decimal"
-                   autocomplete="off" placeholder="-12 or 30"
-                   aria-describedby="amount-msg">
-            <p class="field-message" id="amount-msg"></p>
+    <main class="controls">
+      <section aria-labelledby="log-title">
+        <h2 id="log-title">Log a trade</h2>
+        <form id="trade-form" novalidate>
+          <div class="log-row">
+            <div class="field field-amount">
+              <label for="amount">Result in dollars</label>
+              <input id="amount" name="amount" type="text" inputmode="decimal"
+                     autocomplete="off" placeholder="-12 or 30"
+                     aria-describedby="amount-msg">
+            </div>
+            <div class="field field-ticker">
+              <label for="ticker">Ticker <span class="optional">(optional)</span></label>
+              <input id="ticker" name="ticker" type="text" autocomplete="off"
+                     placeholder="QQQ" maxlength="10">
+            </div>
           </div>
-          <div class="field">
-            <label for="ticker">Ticker <span class="optional">(optional)</span></label>
-            <input id="ticker" name="ticker" type="text" autocomplete="off"
-                   placeholder="QQQ" maxlength="10">
-          </div>
+          <p class="field-message" id="amount-msg"></p>
+          <button type="submit" class="btn-main">Log trade</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="list-title">
+        <div class="list-head">
+          <h2 id="list-title">Trades</h2>
+          <label class="visually-hidden" for="filter">Show</label>
+          <select id="filter">
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+            <option value="all">All</option>
+          </select>
         </div>
-        <button type="submit" class="btn-main">Log trade</button>
-      </form>
-    </section>
+        <ul class="trades" id="trades"></ul>
+        <p class="empty" id="empty">No trades yet. Log your first one above.</p>
+      </section>
 
-    <section aria-labelledby="list-title">
-      <div class="list-head">
-        <h2 class="label" id="list-title">Trades</h2>
-        <label class="visually-hidden" for="filter">Show</label>
-        <select id="filter">
-          <option value="today">Today</option>
-          <option value="week">This week</option>
-          <option value="all">All</option>
-        </select>
-      </div>
-      <ul class="trades" id="trades"></ul>
-      <p class="empty" id="empty">No trades yet. Log your first one above.</p>
-    </section>
+      <section aria-labelledby="rules-title">
+        <details class="rules-box" id="rules-box">
+          <summary>
+            <span class="summary-title" id="rules-title">My rules</span>
+            <span class="summary-text" id="rules-summary"></span>
+            <span class="summary-action">Edit</span>
+          </summary>
+          <form id="rules-form" novalidate>
+            <div class="rules">
+              <div class="field">
+                <label for="maxLosses">Max losses per day</label>
+                <input id="maxLosses" name="maxLosses" type="text" inputmode="numeric"
+                       aria-describedby="maxLosses-msg">
+                <p class="field-message" id="maxLosses-msg"></p>
+              </div>
+              <div class="field">
+                <label for="dailyLimit">Daily loss limit ($)</label>
+                <input id="dailyLimit" name="dailyLimit" type="text" inputmode="numeric"
+                       aria-describedby="dailyLimit-msg">
+                <p class="field-message" id="dailyLimit-msg"></p>
+              </div>
+              <div class="field">
+                <label for="weeklyLimit">Weekly loss limit ($)</label>
+                <input id="weeklyLimit" name="weeklyLimit" type="text" inputmode="numeric"
+                       aria-describedby="weeklyLimit-msg">
+                <p class="field-message" id="weeklyLimit-msg"></p>
+              </div>
+              <div class="field">
+                <label for="cooldown">Wait after a loss (minutes)</label>
+                <input id="cooldown" name="cooldown" type="text" inputmode="numeric"
+                       aria-describedby="cooldown-msg">
+                <p class="field-message" id="cooldown-msg"></p>
+              </div>
+            </div>
+            <button type="submit" class="btn-main">Save rules</button>
+            <p class="saved" id="rules-saved" aria-live="polite"></p>
+          </form>
+        </details>
+      </section>
 
-    <section aria-labelledby="rules-title">
-      <h2 class="label" id="rules-title">My rules</h2>
-      <form id="rules-form" novalidate>
-        <div class="rules">
-          <div class="field">
-            <label for="maxLosses">Max losses per day</label>
-            <input id="maxLosses" name="maxLosses" type="text" inputmode="numeric"
-                   aria-describedby="maxLosses-msg">
-            <p class="field-message" id="maxLosses-msg"></p>
-          </div>
-          <div class="field">
-            <label for="dailyLimit">Daily loss limit ($)</label>
-            <input id="dailyLimit" name="dailyLimit" type="text" inputmode="numeric"
-                   aria-describedby="dailyLimit-msg">
-            <p class="field-message" id="dailyLimit-msg"></p>
-          </div>
-          <div class="field">
-            <label for="weeklyLimit">Weekly loss limit ($)</label>
-            <input id="weeklyLimit" name="weeklyLimit" type="text" inputmode="numeric"
-                   aria-describedby="weeklyLimit-msg">
-            <p class="field-message" id="weeklyLimit-msg"></p>
-          </div>
-          <div class="field">
-            <label for="cooldown">Wait after a loss (minutes)</label>
-            <input id="cooldown" name="cooldown" type="text" inputmode="numeric"
-                   aria-describedby="cooldown-msg">
-            <p class="field-message" id="cooldown-msg"></p>
-          </div>
+      <section aria-labelledby="reset-title">
+        <h2 id="reset-title">Reset</h2>
+        <div class="resets">
+          <button type="button" class="btn-quiet" id="clear-today">Clear today</button>
+          <button type="button" class="btn-danger" id="start-over">Start over</button>
         </div>
-        <button type="submit" class="btn-main">Save rules</button>
-        <p class="saved" id="rules-saved" aria-live="polite"></p>
-      </form>
-    </section>
+        <p class="hint">Clear today removes today's trades. Start over removes every trade and puts the rules back to the defaults.</p>
+      </section>
+    </main>
 
-    <section aria-labelledby="reset-title">
-      <h2 class="label" id="reset-title">Reset</h2>
-      <div class="resets">
-        <button type="button" class="btn-quiet" id="clear-today">Clear today</button>
-        <button type="button" class="btn-danger" id="start-over">Start over</button>
-      </div>
-      <p class="hint">Clear today removes today's trades. Start over removes every trade and puts the rules back to the defaults.</p>
-    </section>
-  </main>
-
+  </div>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -116,7 +116,16 @@ const els = {
   rulesForm: document.getElementById('rules-form'),
   rulesSaved: document.getElementById('rules-saved'),
   countdown: document.getElementById('countdown'),
+  tiles: [...document.querySelectorAll('#flaps .tile')],
+  dayFig: document.getElementById('day-fig'),
+  dayFill: document.getElementById('day-fill'),
+  weekFig: document.getElementById('week-fig'),
+  weekFill: document.getElementById('week-fill'),
+  dots: document.getElementById('dots'),
+  rulesSummary: document.getElementById('rules-summary'),
 };
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function money(n) {
   const sign = n < 0 ? '-' : '';
@@ -140,12 +149,47 @@ function countdownText(ms) {
   return `${m}:${s} to go`;
 }
 
+// Short money for the gauges: "$12.50" but "$50" when there are no cents.
+function shortMoney(n) {
+  return Number.isInteger(n) ? `$${n.toLocaleString('en-US')}` : money(n);
+}
+
+// The split-flap board. Each tile flips only if its letter changes, one after
+// another, so YES to NO flips the tiles that differ. Looks only: the answer
+// itself is the hidden #verdict text, which screen readers read.
+function setFlaps(word) {
+  const letters = word.toUpperCase().padEnd(els.tiles.length, ' ').split('');
+  els.tiles.forEach((tile, i) => {
+    const ch = tile.firstElementChild;
+    if (tile.dataset.letter === letters[i]) return;
+    tile.dataset.letter = letters[i];
+    if (reduceMotion) {
+      ch.textContent = letters[i];
+      return;
+    }
+    setTimeout(() => {
+      tile.classList.remove('flip');
+      void tile.offsetWidth; // restart the animation if it is already running
+      tile.classList.add('flip');
+      setTimeout(() => { ch.textContent = letters[i]; }, 140); // swap at the halfway point
+    }, i * 60);
+  });
+}
+
+// Fills a gauge bar: go under 60%, wait from 60%, stop at 100%.
+function setGauge(fill, used, limit) {
+  const share = Math.min(used / limit, 1);
+  fill.style.width = `${share * 100}%`;
+  fill.dataset.level = share >= 1 ? 'stop' : share >= 0.6 ? 'wait' : 'go';
+}
+
 let lastAnswer = '';
 
 function renderAnswer(now) {
   const verdict = getVerdict(now);
   els.answer.dataset.state = verdict.state;
   els.verdict.textContent = verdict.word;
+  setFlaps(verdict.word);
   els.reason.textContent = verdict.reason;
   els.countdown.textContent = verdict.clearAt ? countdownText(verdict.clearAt - now.getTime()) : '';
   lastAnswer = verdict.state + verdict.reason;
@@ -159,7 +203,27 @@ function render() {
   const week = trades.filter((t) => new Date(t.time) >= startOfWeek(now));
   els.statToday.textContent = signedMoney(total(today));
   els.statWeek.textContent = signedMoney(total(week));
-  els.statLosses.textContent = `${today.filter((t) => t.amount < 0).length} of ${rules.maxLosses}`;
+  const lossCount = today.filter((t) => t.amount < 0).length;
+  els.statLosses.textContent = `${lossCount} of ${rules.maxLosses}`;
+
+  // Gauges: how much of each limit is used. Being up counts as $0 lost.
+  const lostToday = Math.max(0, -total(today));
+  const lostWeek = Math.max(0, -total(week));
+  els.dayFig.textContent = `${shortMoney(lostToday)} of ${shortMoney(rules.dailyLimit)}`;
+  els.weekFig.textContent = `${shortMoney(lostWeek)} of ${shortMoney(rules.weeklyLimit)}`;
+  setGauge(els.dayFill, lostToday, rules.dailyLimit);
+  setGauge(els.weekFill, lostWeek, rules.weeklyLimit);
+
+  // One dot per allowed loss, filled for each loss today.
+  els.dots.replaceChildren();
+  for (let i = 0; i < Math.min(rules.maxLosses, 20); i++) {
+    const dot = document.createElement('span');
+    dot.className = i < lossCount ? 'dot used' : 'dot';
+    els.dots.appendChild(dot);
+  }
+
+  els.rulesSummary.textContent =
+    `${plural(rules.maxLosses, 'loss', 'losses')}, $${rules.dailyLimit} a day, $${rules.weeklyLimit} a week, ${rules.cooldown} min after a loss`;
 
   // Which trades the list shows depends on the dropdown. The data does not change.
   let shown;
@@ -175,6 +239,7 @@ function render() {
     time.className = 'time';
     time.textContent = clock(t.time);
     const ticker = document.createElement('span');
+    ticker.className = 'ticker';
     ticker.textContent = t.ticker || '-';
     const result = document.createElement('span');
     result.className = 'result';
@@ -185,6 +250,7 @@ function render() {
     del.textContent = 'Delete';
     del.dataset.id = t.id;
     del.setAttribute('aria-label', `Delete the ${signedMoney(t.amount)} trade at ${clock(t.time)}`);
+    if (t.id === justAdded) li.className = 'new';
     li.append(time, ticker, result, del);
     els.list.appendChild(li);
   }
@@ -219,15 +285,20 @@ function showError(input, message) {
 
 // ---- Actions ----
 
+let justAdded = null; // id of the newest trade, so its row can flash once
+
 function addTrade(amount, ticker) {
-  trades.push({
+  const trade = {
     id: Date.now(),
     amount,
     ticker: ticker.toUpperCase(),
     time: new Date().toISOString(),
-  });
+  };
+  trades.push(trade);
   save();
+  justAdded = trade.id;
   render();
+  justAdded = null;
 }
 
 function deleteTrade(id) {
@@ -278,7 +349,7 @@ els.rulesForm.addEventListener('submit', (e) => {
   rules = next;
   save();
   render();
-  els.rulesSaved.textContent = 'Rules saved. The answer above uses them now.';
+  els.rulesSaved.textContent = 'Rules saved. The board uses them now.';
 });
 
 els.tradeForm.addEventListener('submit', (e) => {
@@ -325,13 +396,18 @@ startOverButton.addEventListener('click', () => {
   if (Date.now() < armedUntil) {
     armedUntil = 0;
     startOverButton.textContent = 'Start over';
+    startOverButton.classList.remove('armed');
     startOver();
     return;
   }
   armedUntil = Date.now() + 4000;
   startOverButton.textContent = 'Tap again to erase everything';
+  startOverButton.classList.add('armed');
   setTimeout(() => {
-    if (Date.now() >= armedUntil) startOverButton.textContent = 'Start over';
+    if (Date.now() >= armedUntil) {
+      startOverButton.textContent = 'Start over';
+      startOverButton.classList.remove('armed');
+    }
   }, 4000);
 });
 
