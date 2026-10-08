@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trade Check</title>
+  <meta name="description" content="Log your trades and see if you can place another one today.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main>
+    <section class="answer" id="answer" aria-live="polite">
+      <h1 class="label">Can I trade?</h1>
+      <p class="verdict" id="verdict">Yes</p>
+      <p class="reason" id="reason">No trades today. You are inside your limits.</p>
+    </section>
+
+    <section aria-labelledby="today-title">
+      <h2 class="label" id="today-title">Today in numbers</h2>
+      <dl class="stats">
+        <div><dt>Today</dt><dd id="stat-today">$0.00</dd></div>
+        <div><dt>This week</dt><dd id="stat-week">$0.00</dd></div>
+        <div><dt>Losses today</dt><dd id="stat-losses">0 of 2</dd></div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="log-title">
+      <h2 class="label" id="log-title">Log a trade</h2>
+      <form id="trade-form" novalidate>
+        <div class="row">
+          <div class="field">
+            <label for="amount">Result in dollars</label>
+            <input id="amount" name="amount" type="text" inputmode="decimal"
+                   autocomplete="off" placeholder="-12 or 30"
+                   aria-describedby="amount-msg">
+            <p class="field-message" id="amount-msg"></p>
+          </div>
+          <div class="field">
+            <label for="ticker">Ticker <span class="optional">(optional)</span></label>
+            <input id="ticker" name="ticker" type="text" autocomplete="off"
+                   placeholder="QQQ" maxlength="10">
+          </div>
+        </div>
+        <button type="submit" class="btn-main">Log trade</button>
+      </form>
+    </section>
+
+    <section aria-labelledby="list-title">
+      <div class="list-head">
+        <h2 class="label" id="list-title">Trades</h2>
+        <label class="visually-hidden" for="filter">Show</label>
+        <select id="filter">
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+      <ul class="trades" id="trades"></ul>
+      <p class="empty" id="empty">No trades yet. Log your first one above.</p>
+    </section>
+
+    <section aria-labelledby="rules-title">
+      <h2 class="label" id="rules-title">My rules</h2>
+      <form id="rules-form" novalidate>
+        <div class="rules">
+          <div class="field">
+            <label for="maxLosses">Max losses per day</label>
+            <input id="maxLosses" name="maxLosses" type="text" inputmode="numeric"
+                   aria-describedby="maxLosses-msg">
+            <p class="field-message" id="maxLosses-msg"></p>
+          </div>
+          <div class="field">
+            <label for="dailyLimit">Daily loss limit ($)</label>
+            <input id="dailyLimit" name="dailyLimit" type="text" inputmode="numeric"
+                   aria-describedby="dailyLimit-msg">
+            <p class="field-message" id="dailyLimit-msg"></p>
+          </div>
+          <div class="field">
+            <label for="weeklyLimit">Weekly loss limit ($)</label>
+            <input id="weeklyLimit" name="weeklyLimit" type="text" inputmode="numeric"
+                   aria-describedby="weeklyLimit-msg">
+            <p class="field-message" id="weeklyLimit-msg"></p>
+          </div>
+          <div class="field">
+            <label for="cooldown">Wait after a loss (minutes)</label>
+            <input id="cooldown" name="cooldown" type="text" inputmode="numeric"
+                   aria-describedby="cooldown-msg">
+            <p class="field-message" id="cooldown-msg"></p>
+          </div>
+        </div>
+        <button type="submit" class="btn-main">Save rules</button>
+        <p class="saved" id="rules-saved" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section aria-labelledby="reset-title">
+      <h2 class="label" id="reset-title">Reset</h2>
+      <div class="resets">
+        <button type="button" class="btn-quiet" id="clear-today">Clear today</button>
+        <button type="button" class="btn-danger" id="start-over">Start over</button>
+      </div>
+      <p class="hint">Clear today removes today's trades. Start over removes every trade and puts the rules back to the defaults.</p>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
