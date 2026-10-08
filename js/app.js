@@ -43,6 +43,10 @@ function startOfWeek(now) {
   return start;
 }
 
+function plural(n, one, many) {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
 function total(list) {
   return list.reduce((sum, t) => sum + t.amount, 0);
 }
@@ -61,7 +65,7 @@ function getVerdict(now) {
     return { state: 'no', word: 'No', reason: 'Daily loss limit reached. Back tomorrow.' };
   }
   if (losses.length >= rules.maxLosses) {
-    return { state: 'no', word: 'No', reason: `${losses.length} losses today. Done for today.` };
+    return { state: 'no', word: 'No', reason: `${plural(losses.length, 'loss', 'losses')} today. Done for today.` };
   }
   if (today.length === 0) {
     return { state: 'yes', word: 'Yes', reason: 'No trades today. You are inside your limits.' };
@@ -71,7 +75,7 @@ function getVerdict(now) {
   return {
     state: 'yes',
     word: 'Yes',
-    reason: `${money(roomLeft)} left before your daily limit, ${lossesLeft} ${lossesLeft === 1 ? 'loss' : 'losses'} left today.`,
+    reason: `${money(roomLeft)} left before your daily limit, ${plural(lossesLeft, 'loss', 'losses')} left today.`,
   };
 }
 
@@ -90,6 +94,8 @@ const els = {
   list: document.getElementById('trades'),
   empty: document.getElementById('empty'),
   filter: document.getElementById('filter'),
+  rulesForm: document.getElementById('rules-form'),
+  rulesSaved: document.getElementById('rules-saved'),
 };
 
 function money(n) {
@@ -201,6 +207,43 @@ els.list.addEventListener('click', (e) => {
 
 els.filter.addEventListener('change', render);
 
+// ---- Rules ----
+
+const RULE_FIELDS = ['maxLosses', 'dailyLimit', 'weeklyLimit', 'cooldown'];
+
+function fillRulesForm() {
+  for (const name of RULE_FIELDS) {
+    const input = document.getElementById(name);
+    input.value = rules[name];
+    showError(input, '');
+  }
+}
+
+els.rulesForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const next = {};
+  let ok = true;
+  for (const name of RULE_FIELDS) {
+    const input = document.getElementById(name);
+    const text = input.value.trim();
+    if (!/^\d+$/.test(text) || Number(text) === 0) {
+      showError(input, 'Use a whole number above 0.');
+      ok = false;
+    } else {
+      showError(input, '');
+      next[name] = Number(text);
+    }
+  }
+  if (!ok) {
+    els.rulesSaved.textContent = '';
+    return; // nothing changes until every rule is valid
+  }
+  rules = next;
+  save();
+  render();
+  els.rulesSaved.textContent = 'Rules saved. The answer above uses them now.';
+});
+
 els.tradeForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const result = readAmount(els.amount.value);
@@ -216,5 +259,6 @@ els.tradeForm.addEventListener('submit', (e) => {
 });
 
 load();
+fillRulesForm();
 render();
 els.amount.focus();
