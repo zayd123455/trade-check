@@ -185,21 +185,28 @@ caps.
 
 ## Motion
 
-- The flap: the top half of the old letter folds down over 160ms, then the
-  bottom half of the new letter folds into place over 160ms. Tiles go left to
-  right, 70ms apart. It runs on load from blank, and whenever the answer
-  changes.
+- The flap: the top half of the old letter folds down over 110ms, then the
+  bottom half of the new letter folds into place over 110ms. A tile does not
+  jump straight to its letter: it runs through two other letters first, the
+  way a mechanical board does, and lands on the third. Tiles go left to right,
+  70ms apart. It runs on load from blank, and whenever the answer changes.
+  When a trade is logged and the answer stays the same, every tile still
+  flips once through one letter and back, so the board acknowledges the
+  entry.
 - The dial needle and fill ease to their new value over 600ms.
 - The result field is not focused on load, because that pops a phone keyboard
   over the signal.
 - The page color fades over 500ms.
 - Logging a trade is the one orchestrated moment, and every part of it answers
   the action: the result well pulses once in the signal color as it clears
-  (400ms); the new row slides down into the tape and settles (500ms); every
+  (400ms); the amount itself lifts out of the well and flies to its new row
+  in the tape (550ms, easing out), and the row settles under it; every
   figure that changed rolls from its old number to its new one (500ms,
-  easing out) instead of jumping; a lamp that turns on pops in from small
-  (360ms, slight overshoot); when the reason line changes it rises into
-  place (400ms). Nothing loops and nothing moves unprompted.
+  easing out) instead of jumping; the dial needle swings with a spring and a
+  small overshoot (700ms); a lamp that turns on pops in from small (360ms,
+  slight overshoot); when the reason line changes it rises into place
+  (400ms). Deleting a row folds it shut (220ms) before it goes. Nothing loops
+  and nothing moves unprompted.
 - With reduced motion on, letters change in place and nothing eases.
 
 ## Components

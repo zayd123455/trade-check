@@ -221,13 +221,13 @@ h2 {
 
 .tile.flipping .flip-top {
   display: block;
-  animation: fold-down 160ms ease-in forwards;
+  animation: fold-down 110ms ease-in forwards;
 }
 
 .tile.flipping .flip-bottom {
   display: block;
   transform: rotateX(90deg);
-  animation: fold-in 160ms ease-out 160ms forwards;
+  animation: fold-in 110ms ease-out 110ms forwards;
 }
 
 @keyframes fold-down {
@@ -331,7 +331,7 @@ h2 {
   stroke-linecap: round;
   transform-origin: 100px 100px;
   transform: rotate(-90deg);
-  transition: transform 600ms cubic-bezier(.2,.8,.2,1);
+  transition: transform 700ms cubic-bezier(0.34, 1.56, 0.64, 1); /* a spring with a small overshoot */
 }
 
 .hub { fill: var(--text); }
@@ -545,6 +545,18 @@ button:focus-visible, summary:focus-visible {
 .btn-danger.armed {
   background: var(--stop);
   color: var(--on-signal);
+}
+
+/* The amount on its way from the well to the tape. */
+.flyer {
+  position: fixed;
+  z-index: 5;
+  pointer-events: none;
+  font-family: var(--figures);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
 }
 
 /* Tape */

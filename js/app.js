@@ -185,8 +185,10 @@ function shortMoney(n) {
 
 // The split-flap unit. Each tile is two halves. To change a letter, the top
 // half of the old letter folds down, then the bottom half of the new letter
-// folds into place. Tiles go left to right. Looks only: the answer itself is
-// the hidden #verdict text, which screen readers read.
+// folds into place. Looks only: the answer itself is the hidden #verdict text,
+// which screen readers read.
+const FLIP_MS = 240; // two 110ms folds plus a little slack
+
 function flipTile(tile, letter) {
   const top = tile.querySelector('.top .ch');
   const bottom = tile.querySelector('.bottom .ch');
@@ -210,16 +212,49 @@ function flipTile(tile, letter) {
   tile.cleanupTimer = setTimeout(() => {
     bottom.textContent = letter;
     tile.classList.remove('flipping');
-  }, 340);
+  }, FLIP_MS);
 }
 
-function setFlaps(word) {
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const randomLetter = (not) => {
+  let l;
+  do { l = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; } while (l === not);
+  return l;
+};
+
+// Runs a tile through a list of letters, one flip after another, like a board
+// spinning to its stop. A new call cancels whatever was still queued.
+function flipThrough(tile, letters, delay) {
+  clearTimeout(tile.flipTimer);
+  tile.queue = letters;
+  const next = (i) => {
+    if (i >= tile.queue.length) return;
+    tile.flipTimer = setTimeout(() => {
+      flipTile(tile, tile.queue[i]);
+      next(i + 1);
+    }, i === 0 ? delay : FLIP_MS);
+  };
+  next(0);
+}
+
+// `rattle` makes tiles whose letter is not changing flip once anyway, so the
+// board acknowledges a logged trade even when the answer stays the same.
+function setFlaps(word, rattle = false) {
   const letters = word.toUpperCase().padEnd(els.tiles.length, ' ').split('');
   els.tiles.forEach((tile, i) => {
-    if (tile.dataset.target === letters[i]) return; // already showing or on its way
-    tile.dataset.target = letters[i];
-    clearTimeout(tile.flipTimer);
-    tile.flipTimer = setTimeout(() => flipTile(tile, letters[i]), i * 70);
+    const target = letters[i];
+    const changing = tile.dataset.target !== target;
+    if (!changing && !rattle) return;
+    tile.dataset.target = target;
+    if (reduceMotion || !changing && target === ' ') {
+      if (changing) flipTile(tile, target);
+      return;
+    }
+    const current = tile.dataset.letter;
+    const through = changing
+      ? [randomLetter(current), randomLetter(target), target]
+      : [randomLetter(current), target];
+    flipThrough(tile, through, i * 70);
   });
 }
 
@@ -264,6 +299,7 @@ function animateOnce(el, className) {
 }
 
 let lastAnswer = '';
+let rattleNext = false; // set by addTrade so the next draw rattles the board
 
 // Only rewrite text that changed, so the live region is not re-announced every second.
 function setText(el, text) {
@@ -274,7 +310,8 @@ function renderAnswer(now) {
   const verdict = getVerdict(now);
   document.body.dataset.state = verdict.state;
   setText(els.verdict, verdict.word);
-  setFlaps(verdict.word);
+  setFlaps(verdict.word, rattleNext);
+  rattleNext = false;
   if (els.reason.textContent !== verdict.reason) {
     els.reason.textContent = verdict.reason;
     animateOnce(els.reason, 'changed');
@@ -397,8 +434,40 @@ function addTrade(amount, ticker) {
   trades.push(trade);
   save();
   justAdded = trade.id;
+  rattleNext = true;
   render();
   justAdded = null;
+  return trade;
+}
+
+// The amount lifts out of the well and flies to its new row in the tape.
+function flyAmount(fromRect, trade) {
+  if (reduceMotion) return;
+  const row = els.list.querySelector(`button[data-id="${trade.id}"]`)?.closest('li');
+  const target = row?.querySelector('.result');
+  if (!target) return;
+  const to = target.getBoundingClientRect();
+  const flyer = document.createElement('span');
+  flyer.className = 'flyer';
+  flyer.textContent = signedMoney(trade.amount);
+  flyer.style.left = `${fromRect.left + 40}px`;
+  flyer.style.top = `${fromRect.top}px`;
+  flyer.style.fontSize = '34px';
+  flyer.style.lineHeight = `${fromRect.height}px`;
+  document.body.appendChild(flyer);
+  target.style.opacity = '0';
+  const dx = to.left - (fromRect.left + 40);
+  const dy = to.top - fromRect.top + (to.height - fromRect.height) / 2;
+  flyer.animate(
+    [
+      { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${21 / 34})`, opacity: 1 },
+    ],
+    { duration: 550, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+  ).finished.then(() => {
+    flyer.remove();
+    target.style.opacity = '';
+  });
 }
 
 function deleteTrade(id) {
@@ -410,7 +479,19 @@ function deleteTrade(id) {
 // One listener on the whole list catches every Delete button, even ones added later.
 els.list.addEventListener('click', (e) => {
   const button = e.target.closest('button[data-id]');
-  if (button) deleteTrade(Number(button.dataset.id));
+  if (!button) return;
+  const id = Number(button.dataset.id);
+  const row = button.closest('li');
+  if (reduceMotion || !row.animate) { deleteTrade(id); return; }
+  // Fold the row shut, then take it out of the data.
+  row.style.overflow = 'hidden';
+  row.animate(
+    [
+      { height: `${row.offsetHeight}px`, opacity: 1, paddingTop: '12px', paddingBottom: '12px' },
+      { height: '0px', opacity: 0, paddingTop: '0px', paddingBottom: '0px' },
+    ],
+    { duration: 220, easing: 'ease-in', fill: 'forwards' },
+  ).finished.then(() => deleteTrade(id));
 });
 
 els.filter.addEventListener('change', render);
@@ -462,9 +543,11 @@ els.tradeForm.addEventListener('submit', (e) => {
     return;
   }
   showError(els.amount, '');
-  addTrade(result.amount, els.ticker.value.trim());
+  const fromRect = els.amount.getBoundingClientRect();
+  const trade = addTrade(result.amount, els.ticker.value.trim());
   els.tradeForm.reset();
   animateOnce(els.amount, 'pulse');
+  flyAmount(fromRect, trade);
   els.amount.focus();
 });
 
