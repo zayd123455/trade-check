@@ -20,7 +20,7 @@ after a refresh. Nothing is sent anywhere.
 
 ## How to use it
 
-1. Set your rules under **My rules**: max losses per day, daily loss limit,
+1. Open **My rules** with Edit and set them: max losses per day, daily loss limit,
    weekly loss limit, and how long to wait after a loss. Save rules.
 2. When a trade closes, type the result under **Log a trade**, like `-12` or
    `30`, and press Enter or Log trade. The ticker is optional.
