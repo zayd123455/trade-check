@@ -20,7 +20,7 @@ colors:
 typography:
   display:
     fontFamily: '"DIN Condensed", "Bahnschrift Condensed", Bahnschrift, "Arial Narrow", sans-serif'
-    fontSize: clamp(96px, 26vw, 220px)
+    fontSize: clamp(96px, 26vw, 260px)
     fontWeight: 700
     lineHeight: 1
     textTransform: uppercase
@@ -42,6 +42,12 @@ typography:
     fontFamily: '"Helvetica Neue", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
     fontSize: 17px
     lineHeight: 1.5
+  scale:
+    small: 15px
+    body: 17px
+    large: 21px
+    heading: 30px
+    amount: 34px
 rounded:
   tile: 10px
   control: 6px
@@ -56,15 +62,24 @@ components:
     faceColor: "{colors.face}"
     hingeColor: "{colors.hinge}"
     rounded: "{rounded.tile}"
+    gap: clamp(6px, 1.5vw, 12px)
+    blankOpacity: 0.45
     flipDuration: 160ms per half
   dial:
     trackColor: "{colors.face}"
     fillColor: signal
     needleColor: "{colors.text}"
+    strokeWidth: 14 for track and fill, 3 for the needle, 2 for ticks
   lamp:
     offColor: "{colors.face}"
     onColor: "{colors.stop}"
-    size: 30px
+    size: 26px
+    gap: 8px
+    insetShadow: inset 0 2px 5px rgba(0, 0, 0, 0.6)
+    ring: 0 0 0 1px {colors.edge}
+  bar:
+    height: 24px
+    rounded: "{rounded.control}"
   button-primary:
     backgroundColor: signal
     textColor: "{colors.on-signal}"
@@ -138,6 +153,9 @@ No web fonts. DIN Condensed and DIN Alternate on a Mac, Bahnschrift on Windows.
   tiles.
 - **figures** is every dollar amount, time and the clock, with lining digits.
 - **body** is sentences, labels and messages.
+- The scale is five sizes: 15 for labels and helper text, 17 for body and
+  figures, 21 for the reason, the net totals and the small "to go" beside the
+  countdown, 30 for headings, 34 for the result field. Nothing else.
 
 ## Layout
 
@@ -148,7 +166,9 @@ the three instruments in a row (dial, lamps, bar), then net today and this
 week. Then Log a trade, Trades as a tape, My rules folded, Reset.
 
 Laptop (960px and up): two columns inside 1240px. The signal unit on the left
-fills the viewport height and stays put. The controls scroll on the right.
+fills the viewport height and stays put, with the instruments pushed to the
+bottom and the net totals under the instrument columns. The controls scroll
+on the right. Every button and select is at least 44px tall.
 
 ## Elevation & Depth
 
@@ -169,15 +189,19 @@ caps.
   right, 70ms apart. It runs on load from blank, and whenever the answer
   changes.
 - The dial needle and fill ease to their new value over 600ms.
+- The result field is not focused on load, because that pops a phone keyboard
+  over the signal.
 - A lamp lights with no animation. The page color fades over 500ms.
 - With reduced motion on, letters change in place and nothing eases.
 
 ## Components
 
-- **Flap unit:** four tiles, letters padded with blank tiles.
+- **Flap unit:** four tiles, letters padded with blank tiles. Blank tiles sit
+  at 45% so they read as spare slots, not missing letters.
 - **Dial:** half circle, five ticks, fill from the left, needle from the hub.
   The figure under it reads "$30 of $50".
 - **Lamps:** one per allowed loss, up to twenty, lit stop for each loss today.
+  Each has an inset shadow and a 1px edge ring so unlit lamps stay visible.
 - **Bar:** the week, with tick marks every 25%.
 - **Primary button:** signal fill, dark text. Hover brightens by a step with
   no other effect.
@@ -186,7 +210,8 @@ caps.
 - **Input:** a well. The result field is a large figure with a dollar sign
   fixed at its left. Focus draws a signal ring.
 - **Tape:** the trades list, rows separated by hairlines, times and results in
-  figures.
+  figures. Delete is underlined muted text, not a button, so the amounts are
+  what reads.
 - **Rules:** folded behind one line that says them in words, with Edit.
 
 ## Do's and Don'ts

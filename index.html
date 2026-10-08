@@ -115,6 +115,7 @@
           </div>
           <p class="field-message" id="amount-msg"></p>
           <button type="submit" class="btn-main">Log trade</button>
+          <p class="hint" id="storage-note" hidden>This browser is not saving. Your trades will be gone when you close the page.</p>
         </form>
       </section>
 
@@ -137,7 +138,7 @@
           <summary>
             <span class="summary-title" id="rules-title">My rules</span>
             <span class="summary-text" id="rules-summary"></span>
-            <span class="summary-action">Edit</span>
+            <span class="summary-action" aria-hidden="true">Edit</span>
           </summary>
           <form id="rules-form" novalidate>
             <div class="rules">

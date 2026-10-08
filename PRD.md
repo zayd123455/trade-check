@@ -23,8 +23,9 @@ Version 1 is one page, `index.html`, top to bottom:
      limit reached. Back tomorrow."
    - Losses today have reached the max: **No**, "2 losses today. Done for
      today."
-   - The last loss today was less than the cooldown ago: **Wait**, with the
-     time it clears and a countdown that ticks every second.
+   - The last loss was less than the cooldown ago, even if it was just before
+     midnight: **Wait**, with the time it clears and a countdown that ticks
+     every second.
    - Otherwise: **Yes**, with the room left: dollars left before the daily
      limit and losses left today.
 2. **Today in numbers.** Today's total, this week's total (weeks start on

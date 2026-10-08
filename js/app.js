@@ -22,8 +22,14 @@ function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved) {
-      trades = Array.isArray(saved.trades) ? saved.trades : [];
+      // Keep only trades that have the shape the page expects.
+      trades = (Array.isArray(saved.trades) ? saved.trades : []).filter(
+        (t) => t && Number.isFinite(t.amount) && !Number.isNaN(new Date(t.time).getTime()) && t.id != null,
+      );
       rules = { ...DEFAULT_RULES, ...saved.rules };
+      for (const k of Object.keys(DEFAULT_RULES)) {
+        if (!(Number.isInteger(rules[k]) && rules[k] > 0)) rules[k] = DEFAULT_RULES[k];
+      }
     }
   } catch {
     trades = [];
@@ -31,11 +37,15 @@ function load() {
   }
 }
 
+let storageWorks = true;
+
 function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ trades, rules }));
+    storageWorks = true;
   } catch {
-    // Storage is blocked (some private windows). The page keeps working until it closes.
+    // Storage is blocked or full. The page keeps working until it closes, and says so.
+    storageWorks = false;
   }
 }
 
@@ -58,8 +68,9 @@ function plural(n, one, many) {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+// Summed in cents so -10.10 + -20.20 + -19.70 is exactly -50, not -49.999...
 function total(list) {
-  return list.reduce((sum, t) => sum + t.amount, 0);
+  return Math.round(list.reduce((sum, t) => sum + t.amount * 100, 0)) / 100;
 }
 
 function getVerdict(now) {
@@ -78,9 +89,11 @@ function getVerdict(now) {
   if (losses.length >= rules.maxLosses) {
     return { state: 'no', word: 'No', reason: `${plural(losses.length, 'loss', 'losses')} today. Done for today.` };
   }
-  // Cooldown: the last loss today has to be at least `cooldown` minutes ago.
-  if (losses.length > 0) {
-    const lastLoss = Math.max(...losses.map((t) => new Date(t.time).getTime()));
+  // Cooldown: the last loss has to be at least `cooldown` minutes ago, even if
+  // it was just before midnight.
+  const allLosses = trades.filter((t) => t.amount < 0);
+  if (allLosses.length > 0) {
+    const lastLoss = Math.max(...allLosses.map((t) => new Date(t.time).getTime()));
     const clearAt = lastLoss + rules.cooldown * 60 * 1000;
     if (now.getTime() < clearAt) {
       return { state: 'wait', word: 'Wait', reason: `Cooling down after a loss. Clear at ${clock(clearAt)}.`, clearAt };
@@ -125,6 +138,7 @@ const els = {
   dots: document.getElementById('dots'),
   rulesSummary: document.getElementById('rules-summary'),
   clock: document.getElementById('clock'),
+  storageNote: document.getElementById('storage-note'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -148,7 +162,20 @@ function countdownText(ms) {
   const seconds = Math.ceil(ms / 1000);
   const m = Math.floor(seconds / 60);
   const s = String(seconds % 60).padStart(2, '0');
-  return `${m}:${s} to go`;
+  return `${m}:${s}`;
+}
+
+// The digits in the display face, "to go" small beside them.
+function setCountdown(text) {
+  if (!text) { els.countdown.replaceChildren(); return; }
+  if (els.countdown.firstChild?.nodeType === Node.TEXT_NODE) {
+    setText(els.countdown.firstChild, text);
+    return;
+  }
+  const unit = document.createElement('span');
+  unit.className = 'unit';
+  unit.textContent = 'to go';
+  els.countdown.replaceChildren(document.createTextNode(text), unit);
 }
 
 // Short money for the gauges: "$12.50" but "$50" when there are no cents.
@@ -179,7 +206,8 @@ function flipTile(tile, letter) {
   tile.classList.remove('flipping');
   void tile.offsetWidth;          // restart the animation if it is mid-flip
   tile.classList.add('flipping');
-  setTimeout(() => {
+  clearTimeout(tile.cleanupTimer);
+  tile.cleanupTimer = setTimeout(() => {
     bottom.textContent = letter;
     tile.classList.remove('flipping');
   }, 340);
@@ -188,8 +216,10 @@ function flipTile(tile, letter) {
 function setFlaps(word) {
   const letters = word.toUpperCase().padEnd(els.tiles.length, ' ').split('');
   els.tiles.forEach((tile, i) => {
-    if (tile.dataset.letter === letters[i]) return;
-    setTimeout(() => flipTile(tile, letters[i]), i * 70);
+    if (tile.dataset.target === letters[i]) return; // already showing or on its way
+    tile.dataset.target = letters[i];
+    clearTimeout(tile.flipTimer);
+    tile.flipTimer = setTimeout(() => flipTile(tile, letters[i]), i * 70);
   });
 }
 
@@ -208,13 +238,18 @@ function setBar(fill, used, limit) {
 
 let lastAnswer = '';
 
+// Only rewrite text that changed, so the live region is not re-announced every second.
+function setText(el, text) {
+  if (el.textContent !== text) el.textContent = text;
+}
+
 function renderAnswer(now) {
   const verdict = getVerdict(now);
   document.body.dataset.state = verdict.state;
-  els.verdict.textContent = verdict.word;
+  setText(els.verdict, verdict.word);
   setFlaps(verdict.word);
-  els.reason.textContent = verdict.reason;
-  els.countdown.textContent = verdict.clearAt ? countdownText(verdict.clearAt - now.getTime()) : '';
+  setText(els.reason, verdict.reason);
+  setCountdown(verdict.clearAt ? countdownText(verdict.clearAt - now.getTime()) : '');
   lastAnswer = verdict.state + verdict.reason;
 }
 
@@ -255,6 +290,7 @@ function render() {
   else shown = trades;
   shown = [...shown].reverse(); // newest first
 
+  const focusedId = document.activeElement?.dataset?.id; // a Delete button, if one has focus
   els.list.replaceChildren();
   for (const t of shown) {
     const li = document.createElement('li');
@@ -277,6 +313,11 @@ function render() {
     li.append(time, ticker, result, del);
     els.list.appendChild(li);
   }
+  if (focusedId) {
+    const again = els.list.querySelector(`button[data-id="${focusedId}"]`);
+    (again || els.list.querySelector('button') || els.filter).focus({ preventScroll: true });
+  }
+  els.storageNote.hidden = storageWorks;
   els.empty.hidden = shown.length > 0;
   if (trades.length === 0) els.empty.textContent = 'No trades yet. Log your first one above.';
   else if (els.filter.value === 'today') els.empty.textContent = 'No trades today.';
@@ -288,10 +329,14 @@ function render() {
 // Turns what was typed into a number, or returns a message saying what is wrong.
 // Accepts things like "-12", "+30", "-$12.50" and "1,200".
 function readAmount(text) {
-  const cleaned = text.replace(/[$,\s]/g, '');
+  let cleaned = text.replace(/[$,\s]/g, '').replace(/[\u2212\u2013\u2014]/g, '-'); // typed minus signs
   if (cleaned === '') return { error: 'Enter the result, like -12 or 30.' };
-  if (!/^[+-]?\d+(\.\d{1,2})?$/.test(cleaned)) return { error: 'Use a number, like -12.50.' };
-  const amount = Number(cleaned);
+  let negative = false;
+  if (/^\(.+\)$/.test(cleaned)) { negative = true; cleaned = cleaned.slice(1, -1); } // (12) means a loss
+  if (/\d-$/.test(cleaned)) { negative = true; cleaned = cleaned.slice(0, -1); }      // 12- too
+  if (!/^[+-]?(\d+\.?\d{0,2}|\.\d{1,2})$/.test(cleaned)) return { error: 'Use a number, like -12.50.' };
+  let amount = Number(cleaned);
+  if (negative) amount = -Math.abs(amount);
   if (amount === 0) return { error: 'A $0 trade does not count. Enter a win or a loss.' };
   return { amount };
 }
@@ -312,7 +357,7 @@ let justAdded = null; // id of the newest trade, so its row can flash once
 
 function addTrade(amount, ticker) {
   const trade = {
-    id: Date.now(),
+    id: trades.reduce((max, t) => Math.max(max, t.id), 0) + 1,
     amount,
     ticker: ticker.toUpperCase(),
     time: new Date().toISOString(),
@@ -357,8 +402,9 @@ els.rulesForm.addEventListener('submit', (e) => {
   for (const name of RULE_FIELDS) {
     const input = document.getElementById(name);
     const text = input.value.trim();
-    if (!/^\d+$/.test(text) || Number(text) === 0) {
-      showError(input, 'Use a whole number above 0.');
+    const limit = name === 'maxLosses' ? 20 : Infinity;
+    if (!/^\d+$/.test(text) || Number(text) === 0 || Number(text) > limit) {
+      showError(input, name === 'maxLosses' ? 'Use a whole number from 1 to 20.' : 'Use a whole number above 0.');
       ok = false;
     } else {
       showError(input, '');
@@ -436,21 +482,34 @@ startOverButton.addEventListener('click', () => {
 
 // Every second: if the answer itself changed (a cooldown ended, or midnight
 // passed), redraw everything. Otherwise only the countdown moves.
+let lastDay = new Date().toDateString();
+
 function tick() {
   const now = new Date();
   els.clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const verdict = getVerdict(now);
-  if (verdict.state + verdict.reason !== lastAnswer) {
+  const day = now.toDateString();
+  // Redraw everything when the answer changes or midnight passes (today's list
+  // and this week's totals move with the date). Otherwise only the countdown.
+  if (day !== lastDay || verdict.state + verdict.reason !== lastAnswer) {
+    lastDay = day;
     render();
   } else {
     renderAnswer(now);
   }
 }
 
+// Another tab of this page saved something: pick it up so the limits hold everywhere.
+window.addEventListener('storage', (e) => {
+  if (e.key !== STORAGE_KEY) return;
+  load();
+  fillRulesForm();
+  render();
+});
+
 load();
 fillRulesForm();
 render();
 tick();
 setInterval(tick, 1000);
-// Ready to type, but without scrolling the signal off the top of a phone.
-els.amount.focus({ preventScroll: true });
+
