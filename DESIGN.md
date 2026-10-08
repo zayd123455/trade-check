@@ -93,6 +93,7 @@ components:
     textColor: "{colors.stop}"
     borderColor: "{colors.stop}"
   input:
+    height: 56px, every well and select the same
     backgroundColor: "{colors.well}"
     borderColor: "{colors.edge}"
     textColor: "{colors.text}"
@@ -207,8 +208,10 @@ caps.
   no other effect.
 - **Quiet button:** edge border, light text. **Danger button:** stop border and
   text; solid stop with dark text when armed.
-- **Input:** a well. The result field is a large figure with a dollar sign
-  fixed at its left. Focus draws a signal ring.
+- **Input:** a well, 56px tall everywhere. The result field is a large figure
+  with a dollar sign fixed at its left, and the rule boxes use the figures face
+  too, so every number on the page is set the same way. Focus draws a signal
+  ring.
 - **Tape:** the trades list, rows separated by hairlines, times and results in
   figures. Delete is underlined muted text, not a button, so the amounts are
   what reads.

@@ -194,7 +194,7 @@ h2 {
   font-size: clamp(96px, 26vw, 260px);
   font-weight: 700;
   line-height: 1;
-  padding-top: 0.22em; /* DIN Condensed sits high; this centers the capitals */
+  padding-top: 0.19em; /* DIN Condensed sits high; this centers the capitals */
   color: var(--signal);
 }
 
@@ -405,7 +405,8 @@ h2 {
 
 input, select {
   width: 100%;
-  padding: 13px 14px;
+  min-height: 56px;
+  padding: 12px 14px;
   font: inherit;
   color: var(--text);
   background: var(--well);
@@ -431,7 +432,7 @@ input[aria-invalid="true"] { border-color: var(--stop); }
   align-items: start;
 }
 
-.log-row input { min-height: 60px; }
+
 
 .money-well {
   position: relative;
@@ -451,14 +452,19 @@ input[aria-invalid="true"] { border-color: var(--stop); }
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: 34px;
-  padding: 8px 14px 8px 40px;
+  padding: 4px 14px 4px 40px;
 }
 
 .field-ticker input {
   text-transform: uppercase;
-  padding: 13px 14px;
-  min-height: 60px;
-  font-size: 17px;
+}
+
+/* Numbers in the rules boxes are set like every other number on the page. */
+.rules input {
+  font-family: var(--figures);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 21px;
 }
 
 .field-message {
@@ -473,12 +479,14 @@ input[aria-invalid="true"] { border-color: var(--stop); }
 form .btn-main { margin-top: var(--gutter); }
 
 /* Buttons */
-button, select {
+button {
   font: inherit;
   cursor: pointer;
   border-radius: var(--r-control);
   min-height: 44px; /* a finger-sized target */
 }
+
+select { cursor: pointer; }
 
 button:focus-visible, summary:focus-visible {
   outline: 2px solid var(--signal);
@@ -528,7 +536,7 @@ button:focus-visible, summary:focus-visible {
 }
 
 .list-head h2 { margin: 0; }
-.list-head select { width: auto; padding: 9px 12px; }
+.list-head select { width: auto; min-height: 44px; padding: 8px 12px; }
 
 .tape {
   list-style: none;
@@ -605,7 +613,7 @@ button:focus-visible, summary:focus-visible {
   line-height: 1;
 }
 
-.summary-text { color: var(--text-muted); font-size: 15px; }
+.summary-text { color: var(--text-muted); font-size: 15px; line-height: 1.4; align-self: center; }
 
 .summary-action {
   color: var(--signal);
@@ -636,8 +644,8 @@ button:focus-visible, summary:focus-visible {
 
 @media (max-width: 480px) {
   .instruments { grid-template-columns: 1fr 1fr; }
-  .dial-wrap { grid-column: 1 / -1; align-items: center; text-align: center; }
-  .dial { max-width: 240px; margin: 0 auto; }
+  .dial-wrap { grid-column: 1 / -1; }
+  .dial { max-width: 220px; }
   .nets { grid-template-columns: 1fr 1fr; }
   .nets > div:last-child { grid-column: auto; }
   .log-row { grid-template-columns: 1fr; }
