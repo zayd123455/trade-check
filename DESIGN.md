@@ -192,7 +192,14 @@ caps.
 - The dial needle and fill ease to their new value over 600ms.
 - The result field is not focused on load, because that pops a phone keyboard
   over the signal.
-- A lamp lights with no animation. The page color fades over 500ms.
+- The page color fades over 500ms.
+- Logging a trade is the one orchestrated moment, and every part of it answers
+  the action: the result well pulses once in the signal color as it clears
+  (400ms); the new row slides down into the tape and settles (500ms); every
+  figure that changed rolls from its old number to its new one (500ms,
+  easing out) instead of jumping; a lamp that turns on pops in from small
+  (360ms, slight overshoot); when the reason line changes it rises into
+  place (400ms). Nothing loops and nothing moves unprompted.
 - With reduced motion on, letters change in place and nothing eases.
 
 ## Components

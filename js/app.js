@@ -236,6 +236,33 @@ function setBar(fill, used, limit) {
   fill.style.width = `${Math.min(used / limit, 1) * 100}%`;
 }
 
+// Rolls a figure from the number it last showed to a new one over 500ms,
+// easing out, so a total counts up or down instead of jumping. The element
+// keeps its last number in data-value. Reduced motion sets it straight away.
+function rollNumber(el, to, format) {
+  const from = Number(el.dataset.value ?? to);
+  el.dataset.value = to;
+  if (reduceMotion || from === to) { el.textContent = format(to); return; }
+  const start = performance.now();
+  cancelAnimationFrame(el.roll);
+  const step = (t) => {
+    const p = Math.min((t - start) / 500, 1);
+    const eased = 1 - (1 - p) ** 3;
+    el.textContent = format(from + (to - from) * eased);
+    if (p < 1) el.roll = requestAnimationFrame(step);
+  };
+  el.roll = requestAnimationFrame(step);
+}
+
+// Adds a class that runs a one-shot CSS animation, and removes it when it ends.
+function animateOnce(el, className) {
+  if (reduceMotion) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+  el.addEventListener('animationend', () => el.classList.remove(className), { once: true });
+}
+
 let lastAnswer = '';
 
 // Only rewrite text that changed, so the live region is not re-announced every second.
@@ -248,7 +275,10 @@ function renderAnswer(now) {
   document.body.dataset.state = verdict.state;
   setText(els.verdict, verdict.word);
   setFlaps(verdict.word);
-  setText(els.reason, verdict.reason);
+  if (els.reason.textContent !== verdict.reason) {
+    els.reason.textContent = verdict.reason;
+    animateOnce(els.reason, 'changed');
+  }
   setCountdown(verdict.clearAt ? countdownText(verdict.clearAt - now.getTime()) : '');
   lastAnswer = verdict.state + verdict.reason;
 }
@@ -259,24 +289,26 @@ function render() {
 
   const today = trades.filter((t) => isToday(t.time, now));
   const week = trades.filter((t) => new Date(t.time) >= startOfWeek(now));
-  els.statToday.textContent = signedMoney(total(today));
-  els.statWeek.textContent = signedMoney(total(week));
+  rollNumber(els.statToday, total(today), signedMoney);
+  rollNumber(els.statWeek, total(week), signedMoney);
   const lossCount = today.filter((t) => t.amount < 0).length;
   els.statLosses.textContent = `${lossCount} of ${rules.maxLosses}`;
 
   // Gauges: how much of each limit is used. Being up counts as $0 lost.
   const lostToday = Math.max(0, -total(today));
   const lostWeek = Math.max(0, -total(week));
-  els.dayFig.textContent = `${shortMoney(lostToday)} of ${shortMoney(rules.dailyLimit)}`;
-  els.weekFig.textContent = `${shortMoney(lostWeek)} of ${shortMoney(rules.weeklyLimit)}`;
+  rollNumber(els.dayFig, lostToday, (n) => `${shortMoney(Math.round(n * 100) / 100)} of ${shortMoney(rules.dailyLimit)}`);
+  rollNumber(els.weekFig, lostWeek, (n) => `${shortMoney(Math.round(n * 100) / 100)} of ${shortMoney(rules.weeklyLimit)}`);
   setDial(lostToday, rules.dailyLimit);
   setBar(els.weekFill, lostWeek, rules.weeklyLimit);
 
   // One lamp per allowed loss, lit for each loss today.
+  const litBefore = els.dots.querySelectorAll('.lamp.on').length;
   els.dots.replaceChildren();
   for (let i = 0; i < Math.min(rules.maxLosses, 20); i++) {
     const lamp = document.createElement('span');
     lamp.className = i < lossCount ? 'lamp on' : 'lamp';
+    if (i < lossCount && i >= litBefore && !reduceMotion) lamp.classList.add('lit-now'); // just turned on
     els.dots.appendChild(lamp);
   }
 
@@ -432,6 +464,7 @@ els.tradeForm.addEventListener('submit', (e) => {
   showError(els.amount, '');
   addTrade(result.amount, els.ticker.value.trim());
   els.tradeForm.reset();
+  animateOnce(els.amount, 'pulse');
   els.amount.focus();
 });
 
