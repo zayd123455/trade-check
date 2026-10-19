@@ -576,11 +576,6 @@ button:focus-visible, summary:focus-visible {
   font-weight: 600;
 }
 
-.btn-danger.armed {
-  background: var(--stop);
-  color: var(--on-signal);
-}
-
 /* The amount on its way from the well to the tape. */
 .flyer {
   position: fixed;

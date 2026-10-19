@@ -31,7 +31,7 @@ after a refresh. Nothing is sent anywhere.
    list between today and this week. **All trades** opens a second page with
    every trade ever logged, grouped by day.
 5. **Clear today** removes today's trades. **Start over** removes everything
-   and puts the default rules back. It asks for a second tap first.
+   and puts the default rules back, in one tap.
 
 ## Files
 
@@ -53,6 +53,9 @@ after a refresh. Nothing is sent anywhere.
 - The favicon had a letter in it that was unreadable at tab size. It is one
   green tile with the hinge line now.
 - The all-time list was a dropdown option. I wanted it on its own page.
+- The agent picked the default limits ($50 a day, $150 a week, 20 minutes).
+  Mine are $100 a day, $300 a week, 10 minutes.
+- Start over asked for a second tap. I want one tap.
 
 ## Design direction
 

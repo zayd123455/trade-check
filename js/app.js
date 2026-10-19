@@ -6,9 +6,9 @@ const STORAGE_KEY = 'trade-check.v1';
 
 const DEFAULT_RULES = {
   maxLosses: 2,     // losses allowed per day
-  dailyLimit: 50,   // dollars you can lose in a day
-  weeklyLimit: 150, // dollars you can lose in a week
-  cooldown: 20,     // minutes to wait after a loss
+  dailyLimit: 100,  // dollars you can lose in a day
+  weeklyLimit: 300, // dollars you can lose in a week
+  cooldown: 10,     // minutes to wait after a loss
 };
 
 // ---- State ----
@@ -564,27 +564,8 @@ function startOver() {
 
 document.getElementById('clear-today').addEventListener('click', clearToday);
 
-// Start over erases everything, so it takes two taps instead of a confirm() box.
-const startOverButton = document.getElementById('start-over');
-let armedUntil = 0;
-startOverButton.addEventListener('click', () => {
-  if (Date.now() < armedUntil) {
-    armedUntil = 0;
-    startOverButton.textContent = 'Start over';
-    startOverButton.classList.remove('armed');
-    startOver();
-    return;
-  }
-  armedUntil = Date.now() + 4000;
-  startOverButton.textContent = 'Tap again to erase everything';
-  startOverButton.classList.add('armed');
-  setTimeout(() => {
-    if (Date.now() >= armedUntil) {
-      startOverButton.textContent = 'Start over';
-      startOverButton.classList.remove('armed');
-    }
-  }, 4000);
-});
+// Start over is one tap. Zayd's call: no confirm step.
+document.getElementById('start-over').addEventListener('click', startOver);
 
 // Every second: if the answer itself changed (a cooldown ended, or midnight
 // passed), redraw everything. Otherwise only the countdown moves.

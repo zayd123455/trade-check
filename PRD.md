@@ -40,7 +40,7 @@ Version 1 is one page, `index.html`, top to bottom:
 6. **Reset.** Clear today removes today's trades. Start over removes all trades
    and puts the rules back to the defaults. Neither reloads the page.
 
-Defaults: 2 losses, $50 a day, $150 a week, 20 minutes.
+Defaults: 2 losses, $100 a day, $300 a week, 10 minutes. Set by me on 10/19.
 
 ## States
 

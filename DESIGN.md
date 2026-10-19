@@ -235,7 +235,7 @@ caps.
 - **Primary button:** signal fill, dark text. Hover brightens by a step with
   no other effect.
 - **Quiet button:** edge border, light text. **Danger button:** stop border and
-  text; solid stop with dark text when armed.
+  text. Start over is one tap, Zayd's call on 10/19.
 - **Input:** a well, 56px tall everywhere. The result field is a large figure
   with a dollar sign fixed at its left, and the rule boxes use the figures face
   too, so every number on the page is set the same way. Focus draws a signal
