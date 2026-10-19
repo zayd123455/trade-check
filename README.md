@@ -41,6 +41,14 @@ after a refresh. Nothing is sent anywhere.
 - `index.html`, `css/styles.css`, `js/app.js`: the tool. All the data lives in
   `trades` and `rules` in `js/app.js`.
 
+## Design direction
+
+I did not make the three trial pages first. I compared directions by building
+the whole page three times instead, and each time DESIGN.md was committed
+before the CSS changed: a plain one-column look (`0234f92`), a dark board inside
+a light page (`2577802`), and the one that stayed, where the whole screen is the
+signal (`623403f`). The first two are still in the history.
+
 ## Where it differed from what I expected
 
 I expected the countdown to redraw the whole page every second. It only redraws
