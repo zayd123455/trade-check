@@ -166,10 +166,24 @@ Phone, one column: the flap unit edge to edge, the reason and countdown, then
 the three instruments in a row (dial, lamps, bar), then net today and this
 week. Then Log a trade, Trades as a tape, My rules folded, Reset.
 
-Laptop (960px and up): two columns inside 1240px. The signal unit on the left
-fills the viewport height and stays put, with the instruments pushed to the
-bottom and the net totals under the instrument columns. The controls scroll
-on the right. Every button and select is at least 44px tall.
+Laptop (960px and up): two columns inside 1240px, and the whole page fits the
+window with no page scroll at 100% zoom. Zayd's call, 2026-10-19. The signal
+unit on the left fills the height, with the instruments pushed to the bottom
+and the net totals under the instrument columns. The right column stacks Log
+a trade, then the tape, which takes whatever height is left and scrolls
+inside itself, then My rules and Reset on one footer row. The flap letters
+scale with the window height so the column never overflows. Every button and
+select is at least 44px tall.
+
+A second page, `trades.html`, lists every trade ever logged, grouped by day
+with a total per day, newest day first. Same surface, same type, no
+instruments. It reads the same saved data and changes nothing. The main
+page's tape links to it, and it links back.
+
+## Icon
+
+The favicon is one flap tile: a green rounded tile on the dark page color,
+split by the hinge line, no letter. It reads at 16px where a letter would not.
 
 ## Elevation & Depth
 
@@ -186,13 +200,13 @@ caps.
 ## Motion
 
 - The flap: the top half of the old letter folds down over 110ms, then the
-  bottom half of the new letter folds into place over 110ms. A tile does not
-  jump straight to its letter: it runs through two other letters first, the
-  way a mechanical board does, and lands on the third. Tiles go left to right,
-  70ms apart. It runs on load from blank, and whenever the answer changes.
-  When a trade is logged and the answer stays the same, every tile still
-  flips once through one letter and back, so the board acknowledges the
-  entry.
+  bottom half of the new letter folds into place over 110ms. One fold per
+  change, straight from the old letter to the new one. Tiles go left to
+  right, 70ms apart. It runs on load from blank, and whenever the answer
+  changes. When a trade is logged and the answer stays the same, every tile
+  still folds once onto the same letter, so the board acknowledges the entry.
+  Zayd's call, 2026-10-19: the earlier version spun through random letters
+  before landing, and he cut it. The fold stays, the flicker goes.
 - The dial needle and fill ease to their new value over 600ms.
 - The result field is not focused on load, because that pops a phone keyboard
   over the signal.

@@ -215,13 +215,6 @@ function flipTile(tile, letter) {
   }, FLIP_MS);
 }
 
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const randomLetter = (not) => {
-  let l;
-  do { l = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; } while (l === not);
-  return l;
-};
-
 // Runs a tile through a list of letters, one flip after another, like a board
 // spinning to its stop. A new call cancels whatever was still queued.
 function flipThrough(tile, letters, delay) {
@@ -250,11 +243,8 @@ function setFlaps(word, rattle = false) {
       if (changing) flipTile(tile, target);
       return;
     }
-    const current = tile.dataset.letter;
-    const through = changing
-      ? [randomLetter(current), randomLetter(target), target]
-      : [randomLetter(current), target];
-    flipThrough(tile, through, i * 70);
+    // One fold straight onto the target. A rattle folds onto the same letter.
+    flipThrough(tile, [target], i * 70);
   });
 }
 
