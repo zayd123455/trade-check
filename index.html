@@ -122,17 +122,20 @@
       <section aria-labelledby="list-title">
         <div class="list-head">
           <h2 id="list-title">Trades</h2>
+          <a class="all-link" href="trades.html">All trades</a>
           <label class="visually-hidden" for="filter">Show</label>
           <select id="filter">
             <option value="today">Today</option>
             <option value="week">This week</option>
-            <option value="all">All</option>
           </select>
         </div>
-        <ul class="tape" id="trades"></ul>
-        <p class="empty" id="empty">No trades yet. Log your first one above.</p>
+        <div class="tape-scroll">
+          <ul class="tape" id="trades"></ul>
+          <p class="empty" id="empty">No trades yet. Log your first one above.</p>
+        </div>
       </section>
 
+      <div class="foot">
       <section aria-labelledby="rules-title">
         <details class="rules-box" id="rules-box">
           <summary>
@@ -170,13 +173,14 @@
       </section>
 
       <section aria-labelledby="reset-title">
-        <h2 id="reset-title">Reset</h2>
+        <h2 id="reset-title" class="visually-hidden">Reset</h2>
         <div class="resets">
           <button type="button" class="btn-quiet" id="clear-today">Clear today</button>
           <button type="button" class="btn-danger" id="start-over">Start over</button>
         </div>
-        <p class="hint">Clear today removes today's trades. Start over removes every trade and puts the rules back to the defaults.</p>
+        <p class="hint">Clear today removes today's trades. Start over removes everything and puts the default rules back.</p>
       </section>
+      </div>
     </main>
 
   </div>

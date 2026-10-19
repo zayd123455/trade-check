@@ -41,7 +41,8 @@ let storageWorks = true;
 
 function save() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ trades, rules }));
+    // The state word rides along so the All trades page can wear the same color.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ trades, rules, state: getVerdict(new Date()).state }));
     storageWorks = true;
   } catch {
     // Storage is blocked or full. The page keeps working until it closes, and says so.
@@ -345,8 +346,7 @@ function render() {
   // Which trades the list shows depends on the dropdown. The data does not change.
   let shown;
   if (els.filter.value === 'today') shown = today;
-  else if (els.filter.value === 'week') shown = week;
-  else shown = trades;
+  else shown = week;
   shown = [...shown].reverse(); // newest first
 
   const focusedId = document.activeElement?.dataset?.id; // a Delete button, if one has focus
@@ -379,8 +379,8 @@ function render() {
   els.storageNote.hidden = storageWorks;
   els.empty.hidden = shown.length > 0;
   if (trades.length === 0) els.empty.textContent = 'No trades yet. Log your first one above.';
-  else if (els.filter.value === 'today') els.empty.textContent = 'No trades today.';
-  else els.empty.textContent = 'No trades this week.';
+  else if (els.filter.value === 'today') els.empty.textContent = 'No trades today. Older ones are under All trades.';
+  else els.empty.textContent = 'No trades this week. Older ones are under All trades.';
 }
 
 // ---- Checking input ----

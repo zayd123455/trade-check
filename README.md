@@ -28,7 +28,8 @@ after a refresh. Nothing is sent anywhere.
 3. Read the signal before the next one: the letters, the reason under them,
    the dial for today's limit, the lamps for losses and the bar for the week.
 4. Made a mistake? Delete that trade from the list. The dropdown switches the
-   list between today, this week and all trades.
+   list between today and this week. **All trades** opens a second page with
+   every trade ever logged, grouped by day.
 5. **Clear today** removes today's trades. **Start over** removes everything
    and puts the default rules back. It asks for a second tap first.
 
@@ -40,6 +41,18 @@ after a refresh. Nothing is sent anywhere.
 - `AGENTS.md`: the rules the agent follows.
 - `index.html`, `css/styles.css`, `js/app.js`: the tool. All the data lives in
   `trades` and `rules` in `js/app.js`.
+- `trades.html`, `js/history.js`: the All trades page. It reads the same saved
+  data and changes nothing.
+
+## Changes I made against the agent's choices
+
+- The flap used to spin through random letters before landing. I cut that: one
+  fold per change. The motion stays, the flicker goes.
+- The agent's layout scrolled on a laptop. I wanted the whole board on one
+  screen at 100% zoom, so now only the trades list scrolls, inside itself.
+- The favicon had a letter in it that was unreadable at tab size. It is one
+  green tile with the hinge line now.
+- The all-time list was a dropdown option. I wanted it on its own page.
 
 ## Design direction
 
