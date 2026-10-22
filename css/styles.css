@@ -165,6 +165,10 @@ h2 {
   .foot section:last-child { display: flex; align-items: center; gap: var(--gutter); flex-wrap: wrap; }
   .foot .hint { flex: 1 1 200px; }
   .rules-box form { margin-top: var(--gutter); }
+  /* While My rules is open, the trades list steps aside so the form fits the
+     screen. If it still does not fit, this column scrolls instead of cutting off. */
+  main.controls { overflow-y: auto; }
+  main.controls:has(.rules-box[open]) > section:nth-child(2) { display: none; }
 }
 
 /* Short laptop windows: drop the reset hint so the tape keeps some rows. */
@@ -691,7 +695,6 @@ button:focus-visible, summary:focus-visible {
   text-underline-offset: 3px;
 }
 
-.rules-box[open] .summary-action { visibility: hidden; }
 .rules-box form { margin-top: calc(var(--unit) * 2.5); }
 
 .rules { display: grid; gap: var(--gutter); }

@@ -490,6 +490,13 @@ els.filter.addEventListener('change', render);
 
 const RULE_FIELDS = ['maxLosses', 'dailyLimit', 'weeklyLimit', 'cooldown'];
 
+// The link in the My rules bar says Edit when the box is shut and Close when it is open.
+const rulesBox = document.getElementById('rules-box');
+const rulesAction = rulesBox.querySelector('.summary-action');
+rulesBox.addEventListener('toggle', () => {
+  rulesAction.textContent = rulesBox.open ? 'Close' : 'Edit';
+});
+
 function fillRulesForm() {
   for (const name of RULE_FIELDS) {
     const input = document.getElementById(name);
